@@ -47,10 +47,5 @@ namespace Network
                 }
             }
         }
-
-        public void AddConnectionInfo()
-        {
-            
-        }
     }
 }

@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Game;
 using Helpers;
+using Network.Enums;
 using UnityEngine;
 
 namespace Network
@@ -17,12 +19,12 @@ namespace Network
         public int clientId;
         
         public CharacterController characterController;
-        
         private Connection _connection;
         private IDictionary<int, ConnectionInfo> _connectionsTable;
         private PacketProcessor _packetProcessor;
-
         private ConnectionInfo _serverInfo;
+        private InterpolationBuffer _interpolationBuffer;
+        private float _currentTime;
 
         void Start()
         {
@@ -31,19 +33,13 @@ namespace Network
             _serverInfo = new ConnectionInfo(ServerId, hostname, port);
             _connectionsTable.Add(_serverInfo.ClientId, _serverInfo);
             _packetProcessor = new PacketProcessor(_connection, _connectionsTable);
+            _interpolationBuffer = new InterpolationBuffer();
         }
 
         void Update()
         {
             _packetProcessor.ProcessInput();
-            // Input
-            List<Message> snapshotsReceived = _serverInfo.SnapshotStream.GetMessagesReceived();
-            foreach (var message in snapshotsReceived)
-            {
-                var snapshotMessage = (SnapshotMessage) message;
-                characterController.transform.position = snapshotMessage.PlayerState.Position;
-            }
-
+            UpdateStateWithSnapshot();
             // Output
             PlayerInput playerInput = PlayerInput.GetPlayerInput();
             if (playerInput.Bitmap != 0)
@@ -51,8 +47,30 @@ namespace Network
                 PlayerInputMessage playerInputMessage = new PlayerInputMessage(clientId, ServerId, playerInput);
                 _serverInfo.InputStream.AddToOutput(playerInputMessage);
             }
-
             _packetProcessor.ProcessOutput();
+            if (_interpolationBuffer.SynchronizeState == ClientSynchronizeState.Synchronized)
+            {
+                _currentTime += Time.deltaTime;
+            }
+        }
+
+        private void UpdateStateWithSnapshot()
+        {
+            List<Message> messages = _serverInfo.SnapshotStream.GetMessagesReceived();
+            if (messages.Count > 0)
+            {
+                SnapshotMessage snapshotMessage = (SnapshotMessage) messages[0];
+                _interpolationBuffer.Add(snapshotMessage);
+                if (_interpolationBuffer.SynchronizeState == ClientSynchronizeState.Unsynchronized)
+                {
+                    _currentTime = snapshotMessage.TimeStamp;
+                    _interpolationBuffer.SynchronizeState = ClientSynchronizeState.Buffering;
+                }
+            }
+            if (_interpolationBuffer.SynchronizeState == ClientSynchronizeState.Synchronized)
+            {
+                characterController.transform.position = _interpolationBuffer.Poll(_currentTime).Position;
+            }
         }
     }
 }

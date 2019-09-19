@@ -16,6 +16,7 @@ namespace Network
         private Connection _connection;
         private IDictionary<int, ConnectionInfo> _connectionsTable;
         private PacketProcessor _packetProcessor;
+        private float _currentTime;
 
         void Start()
         {
@@ -23,10 +24,12 @@ namespace Network
             _connectionsTable = new Dictionary<int, ConnectionInfo>();
             _packetProcessor = new PacketProcessor(_connection, _connectionsTable);
             _connectionsTable.Add(1, new ConnectionInfo(1, "localhost", 2000));
+            _currentTime = 0f;
         }
 
         void Update()
         {
+            _currentTime += Time.deltaTime;
             _packetProcessor.ProcessInput();
             ApplyPlayerMovements();
             BroadCastSnapshot();
@@ -60,7 +63,7 @@ namespace Network
             PlayerState playerState = new PlayerState(characterController.transform.position);
             foreach (var connection in _connectionsTable.Values)
             {
-                SnapshotMessage snapshotMessage = new SnapshotMessage(ServerId, connection.ClientId, playerState);
+                SnapshotMessage snapshotMessage = new SnapshotMessage(ServerId, connection.ClientId, playerState, _currentTime);
                 connection.SnapshotStream.AddToOutput(snapshotMessage);
             }
         }
