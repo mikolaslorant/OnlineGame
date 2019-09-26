@@ -8,13 +8,15 @@ namespace Network
 {
     public class Connection
     {
-        public double packetLoss = 0.0;
+        public double packetLoss = 0.2;
 
         private readonly Queue<byte[]> _queue;
         private readonly UdpClient _udpClient;
+        private readonly System.Random _random;
 
         public Connection(int listenPort)
         {
+            _random = new System.Random();
             var thread = new Thread(PollData);
             _queue = new Queue<byte[]>();
             _udpClient = new UdpClient(listenPort);
@@ -23,8 +25,8 @@ namespace Network
     
         public void SendData(byte[] data, string hostname, int port)
         {
-            System.Random random = new System.Random();
-            if (random.NextDouble() >= packetLoss)
+            
+            if (_random.NextDouble() >= packetLoss)
             {
                 _udpClient.Send(data, data.Length, hostname, port);
             }

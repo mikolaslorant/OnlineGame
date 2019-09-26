@@ -29,8 +29,9 @@ namespace Network
                             break;
                         case MessageType.Snapshot:
                             Vector3 position = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+                            float timeStamp = reader.ReadSingle();
                             PlayerState playerState = new PlayerState(position);
-                            message = new SnapshotMessage(id, senderId, receiverId, playerState);
+                            message = new SnapshotMessage(id, senderId, receiverId, playerState, timeStamp);
                             break;
                     }
                 }

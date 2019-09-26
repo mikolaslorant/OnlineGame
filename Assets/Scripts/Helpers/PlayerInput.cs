@@ -47,13 +47,13 @@ namespace Helpers
         public static PlayerInput GetPlayerInput()
         {
             PlayerInput playerInput = new PlayerInput(0);
-            if (Input.GetKeyDown(KeyCode.UpArrow))
+            if (Input.GetKey(KeyCode.UpArrow))
                 playerInput.AddKey(KeyCode.UpArrow);
-            if (Input.GetKeyDown(KeyCode.DownArrow))
+            if (Input.GetKey(KeyCode.DownArrow))
                 playerInput.AddKey(KeyCode.DownArrow);
-            if (Input.GetKeyDown(KeyCode.RightArrow))
+            if (Input.GetKey(KeyCode.RightArrow))
                 playerInput.AddKey(KeyCode.RightArrow);
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            if (Input.GetKey(KeyCode.LeftArrow))
                 playerInput.AddKey(KeyCode.LeftArrow);
             return playerInput;
         }
