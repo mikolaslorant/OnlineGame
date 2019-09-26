@@ -16,9 +16,10 @@ namespace Network
             _playerState = playerState;
         }
         
-        public SnapshotMessage(int id, int senderId, int receiverId, PlayerState playerState) : base(id, senderId, receiverId)
+        public SnapshotMessage(int id, int senderId, int receiverId, PlayerState playerState, float timeStamp) : base(id, senderId, receiverId)
         {
             _playerState = playerState;
+            _timeStamp = timeStamp;
         }
 
         public override byte[] Serialize()
@@ -32,6 +33,7 @@ namespace Network
                     writer.Write(_playerState.Position.x);
                     writer.Write(_playerState.Position.y);
                     writer.Write(_playerState.Position.z);
+                    writer.Write(_timeStamp);
                 }
                 return m.ToArray();
             }

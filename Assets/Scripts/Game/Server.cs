@@ -1,22 +1,27 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 using Game;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Network
 {
     public class Server : MonoBehaviour
     {
-        private const int ServerId = 0;
-        
-        public int listenPort;
-
+        // Game rules
         public CharacterController characterController;
+        public float speed;
 
+        public float gravity ;
+        // Network
+        public int listenPort;
         private Connection _connection;
         private IDictionary<int, ConnectionInfo> _connectionsTable;
         private PacketProcessor _packetProcessor;
         private float _currentTime;
+        private const int ServerId = 0;
 
         void Start()
         {
@@ -29,11 +34,11 @@ namespace Network
 
         void Update()
         {
-            _currentTime += Time.deltaTime;
             _packetProcessor.ProcessInput();
             ApplyPlayerMovements();
             BroadCastSnapshot();
             _packetProcessor.ProcessOutput();
+            _currentTime += Time.deltaTime;
         }
 
         private void ApplyPlayerMovements()
@@ -42,18 +47,24 @@ namespace Network
             {
                 // Input
                 List<Message> playerInputsReceived = connection.InputStream.GetMessagesReceived();
+                Vector3 totalMovement = new Vector3();
                 foreach (var message in playerInputsReceived)
                 {
                     var playerInputMessage = (PlayerInputMessage) message;
                     if (playerInputMessage.PlayerInput.GetKeyDown(KeyCode.UpArrow))
-                        characterController.Move(new Vector3(0, 1, 0));
+                        totalMovement += new Vector3(0, 0, 1);
                     if (playerInputMessage.PlayerInput.GetKeyDown(KeyCode.DownArrow))
-                        characterController.Move(new Vector3(0, -1, 0));
+                        totalMovement += new Vector3(0, 0, -1);
                     if (playerInputMessage.PlayerInput.GetKeyDown(KeyCode.RightArrow))
-                        characterController.Move(new Vector3(1, 0, 0));
+                        totalMovement += new Vector3(1, 0, 0);
                     if (playerInputMessage.PlayerInput.GetKeyDown(KeyCode.LeftArrow))
-                        characterController.Move(new Vector3(-1, 0, 0));
+                        totalMovement += new Vector3(-1, 0, 0);
+                    totalMovement *= speed;
+                    characterController.Move(totalMovement);
                 }
+                totalMovement = Vector3.zero;
+                totalMovement.y -= 0.5f * gravity;
+                characterController.Move(totalMovement);
             }
         }
 

@@ -40,13 +40,6 @@ namespace Network
         {
             _packetProcessor.ProcessInput();
             UpdateStateWithSnapshot();
-            // Output
-            PlayerInput playerInput = PlayerInput.GetPlayerInput();
-            if (playerInput.Bitmap != 0)
-            {
-                PlayerInputMessage playerInputMessage = new PlayerInputMessage(clientId, ServerId, playerInput);
-                _serverInfo.InputStream.AddToOutput(playerInputMessage);
-            }
             _packetProcessor.ProcessOutput();
             if (_interpolationBuffer.SynchronizeState == ClientSynchronizeState.Synchronized)
             {
@@ -54,22 +47,34 @@ namespace Network
             }
         }
 
+        void FixedUpdate()
+        {
+            // Output
+            PlayerInput playerInput = PlayerInput.GetPlayerInput();
+            if (playerInput.Bitmap != 0)
+            {
+                PlayerInputMessage playerInputMessage = new PlayerInputMessage(clientId, ServerId, playerInput);
+                _serverInfo.InputStream.AddToOutput(playerInputMessage);
+            }
+        }
+        
         private void UpdateStateWithSnapshot()
         {
             List<Message> messages = _serverInfo.SnapshotStream.GetMessagesReceived();
             if (messages.Count > 0)
             {
                 SnapshotMessage snapshotMessage = (SnapshotMessage) messages[0];
-                _interpolationBuffer.Add(snapshotMessage);
                 if (_interpolationBuffer.SynchronizeState == ClientSynchronizeState.Unsynchronized)
                 {
                     _currentTime = snapshotMessage.TimeStamp;
                     _interpolationBuffer.SynchronizeState = ClientSynchronizeState.Buffering;
                 }
+                _interpolationBuffer.Add(snapshotMessage);
             }
-            if (_interpolationBuffer.SynchronizeState == ClientSynchronizeState.Synchronized)
+            PlayerState interpolatedState = _interpolationBuffer.Poll(_currentTime);
+            if (interpolatedState != null)
             {
-                characterController.transform.position = _interpolationBuffer.Poll(_currentTime).Position;
+                characterController.transform.position = interpolatedState.Position; 
             }
         }
     }

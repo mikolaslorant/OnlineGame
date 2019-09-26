@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Numerics;
-using System.Runtime.InteropServices.WindowsRuntime;
+﻿    using System.Collections.Generic;
+    using System.Numerics;
+    using System.Runtime.InteropServices.WindowsRuntime;
 using Game;
 using Network.Enums;
 using UnityEditor.U2D;
@@ -19,7 +19,7 @@ namespace Network
 
         public InterpolationBuffer()
         {
-            this._minimumSize = 5;
+            this._minimumSize = 3;
             this._buffer = new List<SnapshotMessage>();
             this.SynchronizeState = ClientSynchronizeState.Unsynchronized;
         }
@@ -29,22 +29,26 @@ namespace Network
         public void Add(SnapshotMessage snapshotMessage)
         {
             _buffer.Add(snapshotMessage);
+            if (_buffer.Count > _minimumSize && SynchronizeState == ClientSynchronizeState.Buffering)
+                SynchronizeState = ClientSynchronizeState.Synchronized;
         }
 
         public PlayerState Poll(float clientTime)
         {
-            if (_buffer.Count == 0)
-                SynchronizeState = ClientSynchronizeState.Buffering;
-            if (_buffer.Count < _minimumSize && SynchronizeState == ClientSynchronizeState.Buffering)
+            if (SynchronizeState != ClientSynchronizeState.Synchronized)
                 return null;
-            SynchronizeState = ClientSynchronizeState.Synchronized;
-            if (_buffer[NextSnapshot].TimeStamp >= clientTime)
+            if (_buffer.Count <= 1)
+            {
+                SynchronizeState = ClientSynchronizeState.Unsynchronized;
+                return null;
+            }
+            if (clientTime >= _buffer[NextSnapshot].TimeStamp)
                 _buffer.RemoveAt(CurrentSnapshot);
-            var deltaTime = _buffer[NextSnapshot].TimeStamp - _buffer[CurrentSnapshot].TimeStamp;
-            var deltaStatePosition = _buffer[NextSnapshot].PlayerState.Position -
+            var snapshotDeltaTime = _buffer[NextSnapshot].TimeStamp - _buffer[CurrentSnapshot].TimeStamp;
+            var snapshotDeltaStatePosition = _buffer[NextSnapshot].PlayerState.Position -
                                      _buffer[CurrentSnapshot].PlayerState.Position;
-            var interpolatedPosition =
-                (deltaStatePosition / deltaTime) * (clientTime - _buffer[CurrentSnapshot].TimeStamp);
+            var deltaTime = clientTime - _buffer[CurrentSnapshot].TimeStamp;
+            var interpolatedPosition = (snapshotDeltaStatePosition / snapshotDeltaTime) * (deltaTime) + _buffer[CurrentSnapshot].PlayerState.Position;
             return new PlayerState(interpolatedPosition);
         }
     }
