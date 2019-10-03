@@ -16,6 +16,7 @@ namespace Network
                     int id = reader.ReadInt32();
                     int senderId = reader.ReadInt32();
                     int receiverId = reader.ReadInt32();
+
                     MessageType messageType = (MessageType) reader.ReadInt32();
                     switch (messageType)
                     {
@@ -25,12 +26,12 @@ namespace Network
                             break;
                         case MessageType.Input:
                             PlayerInput playerInput = new PlayerInput(reader.ReadByte());
-                            message = new PlayerInputMessage(id, senderId, receiverId, playerInput);
+                            message = new PlayerInputMessage(id, senderId, receiverId, playerInput, reader.ReadInt64());
                             break;
                         case MessageType.Snapshot:
                             Vector3 position = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
                             float timeStamp = reader.ReadSingle();
-                            PlayerState playerState = new PlayerState(position);
+                            PlayerState playerState = new PlayerState(position, reader.ReadInt64());
                             message = new SnapshotMessage(id, senderId, receiverId, playerState, timeStamp);
                             break;
                     }

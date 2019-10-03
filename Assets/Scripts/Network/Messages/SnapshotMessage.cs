@@ -9,6 +9,7 @@ namespace Network
     {
         private readonly PlayerState _playerState;
         private readonly float _timeStamp;
+        private readonly long _sequenceNumber;
 
         public SnapshotMessage(int senderId, int receiverId, PlayerState playerState, float timeStamp) : base(senderId, receiverId)
         {
@@ -34,6 +35,7 @@ namespace Network
                     writer.Write(_playerState.Position.y);
                     writer.Write(_playerState.Position.z);
                     writer.Write(_timeStamp);
+                    writer.Write(_sequenceNumber);
                 }
                 return m.ToArray();
             }

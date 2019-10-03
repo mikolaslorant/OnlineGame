@@ -11,6 +11,8 @@ namespace Network
     public class Client : MonoBehaviour
     {
         private const int ServerId = 0;
+
+        private long inputPacketsSent = 0;
         
         public string hostname;
         public int port;
@@ -53,7 +55,7 @@ namespace Network
             PlayerInput playerInput = PlayerInput.GetPlayerInput();
             if (playerInput.Bitmap != 0)
             {
-                PlayerInputMessage playerInputMessage = new PlayerInputMessage(clientId, ServerId, playerInput);
+                PlayerInputMessage playerInputMessage = new PlayerInputMessage(clientId, ServerId, playerInput, ++inputPacketsSent);
                 _serverInfo.InputStream.AddToOutput(playerInputMessage);
             }
         }

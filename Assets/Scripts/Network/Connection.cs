@@ -8,7 +8,7 @@ namespace Network
 {
     public class Connection
     {
-        public double packetLoss = 0.2;
+        public double packetLoss = 0.0;
 
         private readonly Queue<byte[]> _queue;
         private readonly UdpClient _udpClient;
