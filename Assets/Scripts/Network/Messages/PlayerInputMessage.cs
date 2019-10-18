@@ -9,16 +9,14 @@ namespace Network
 
         private readonly long _sequenceNumber;
 
-        public PlayerInputMessage(int senderId, int receiverId, PlayerInput playerInput, long sequenceNumber) : base(senderId, receiverId)
+        public PlayerInputMessage(int senderId, int receiverId, PlayerInput playerInput) : base(senderId, receiverId)
         {
             _playerInput = playerInput;
-            _sequenceNumber = sequenceNumber;
         }
 
-        public PlayerInputMessage(int id, int senderId, int receiverId, PlayerInput playerInput, long sequenceNumber) : base(id, senderId, receiverId)
+        public PlayerInputMessage(int id, int senderId, int receiverId, PlayerInput playerInput) : base(id, senderId, receiverId)
         {
             _playerInput = playerInput;
-            _sequenceNumber = sequenceNumber;
         }
         
         public override byte[] Serialize()
@@ -30,7 +28,7 @@ namespace Network
                     writer.Write(ReceiverId);
                     writer.Write((int) Type());
                     writer.Write(_playerInput.Bitmap);
-                    writer.Write(_sequenceNumber);
+                    writer.Write(_playerInput.Tick);
                 }
                 return m.ToArray();
             }
@@ -42,6 +40,5 @@ namespace Network
         }
 
         public PlayerInput PlayerInput => _playerInput;
-        public long SequenceNumber => _sequenceNumber;
     }
 }

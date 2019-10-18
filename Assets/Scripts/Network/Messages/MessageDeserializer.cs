@@ -25,14 +25,21 @@ namespace Network
                             message = new AckMessage(id, senderId, receiverId, ackType);
                             break;
                         case MessageType.Input:
-                            PlayerInput playerInput = new PlayerInput(reader.ReadByte());
-                            message = new PlayerInputMessage(id, senderId, receiverId, playerInput, reader.ReadInt64());
+                            PlayerInput playerInput = new PlayerInput(reader.ReadByte(), reader.ReadInt32());
+                            message = new PlayerInputMessage(id, senderId, receiverId, playerInput);
                             break;
                         case MessageType.Snapshot:
-                            Vector3 position = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+                            WorldState worldState = new WorldState();
+                            var playerCount = reader.ReadInt32();
+                            for (int i = 0; i < playerCount; i++)
+                            {
+                                int playerId = reader.ReadInt32();
+                                worldState.Players[playerId] 
+                                    = new PlayerState(new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
+                            }
+                            int tick = reader.ReadInt32();
                             float timeStamp = reader.ReadSingle();
-                            PlayerState playerState = new PlayerState(position, reader.ReadInt64());
-                            message = new SnapshotMessage(id, senderId, receiverId, playerState, timeStamp);
+                            message = new SnapshotMessage(id, senderId, receiverId, worldState, tick, timeStamp);
                             break;
                     }
                 }

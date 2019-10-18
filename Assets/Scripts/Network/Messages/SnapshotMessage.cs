@@ -7,22 +7,25 @@ namespace Network
 {
     public class SnapshotMessage : Message
     {
-        private readonly PlayerState _playerState;
+        private readonly WorldState _worldState;
+        private readonly int _tick;
         private readonly float _timeStamp;
-        private readonly long _sequenceNumber;
 
-        public SnapshotMessage(int senderId, int receiverId, PlayerState playerState, float timeStamp) : base(senderId, receiverId)
+        public SnapshotMessage(int senderId, int receiverId, WorldState worldState, int tick, float timeStamp) : base(senderId, receiverId)
         {
+            _worldState = worldState;
+            _tick = tick;
             _timeStamp = timeStamp;
-            _playerState = playerState;
         }
         
-        public SnapshotMessage(int id, int senderId, int receiverId, PlayerState playerState, float timeStamp) : base(id, senderId, receiverId)
+        public SnapshotMessage(int id, int senderId, int receiverId, WorldState worldState, int tick, float timeStamp) : base(id, senderId, receiverId)
         {
-            _playerState = playerState;
+            _worldState = worldState;
+            _tick = tick;
             _timeStamp = timeStamp;
         }
 
+        // TODO: optimize byte usage.
         public override byte[] Serialize()
         {
             using (MemoryStream m = new MemoryStream()) {
@@ -31,11 +34,16 @@ namespace Network
                     writer.Write(SenderId);
                     writer.Write(ReceiverId);
                     writer.Write((int) Type());
-                    writer.Write(_playerState.Position.x);
-                    writer.Write(_playerState.Position.y);
-                    writer.Write(_playerState.Position.z);
+                    writer.Write(_worldState.Players.Count);
+                    foreach (var player in _worldState.Players)
+                    {
+                        writer.Write(player.Key); // playerId
+                        writer.Write(player.Value.Position.x);
+                        writer.Write(player.Value.Position.y);
+                        writer.Write(player.Value.Position.z);
+                    }
+                    writer.Write(_tick);
                     writer.Write(_timeStamp);
-                    writer.Write(_sequenceNumber);
                 }
                 return m.ToArray();
             }
@@ -43,8 +51,8 @@ namespace Network
 
         public override MessageType Type() => MessageType.Snapshot;
 
-        public PlayerState PlayerState => _playerState;
-
+        public WorldState WorldState => _worldState;
+        public int Tick => _tick;
         public float TimeStamp => _timeStamp;
     }
 }

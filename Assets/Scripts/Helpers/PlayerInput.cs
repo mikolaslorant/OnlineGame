@@ -5,10 +5,12 @@ namespace Helpers
     public class PlayerInput
     {
         private byte _bitmap;
+        private int _tick;
 
-        public PlayerInput(byte bitmap)
+        public PlayerInput(byte bitmap, int tick)
         {
             _bitmap = bitmap;
+            _tick = tick;
         }
 
         public void AddKey(KeyCode keyCode)
@@ -44,9 +46,9 @@ namespace Helpers
             }
         }
         
-        public static PlayerInput GetPlayerInput()
+        public static PlayerInput GetPlayerInput(int tick)
         {
-            PlayerInput playerInput = new PlayerInput(0);
+            PlayerInput playerInput = new PlayerInput(0, tick);
             if (Input.GetKey(KeyCode.UpArrow))
                 playerInput.AddKey(KeyCode.UpArrow);
             if (Input.GetKey(KeyCode.DownArrow))
@@ -59,5 +61,6 @@ namespace Helpers
         }
 
         public byte Bitmap => _bitmap;
+        public int Tick => _tick;
     }
 }

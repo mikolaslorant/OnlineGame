@@ -33,7 +33,14 @@ namespace Network
                 SynchronizeState = ClientSynchronizeState.Synchronized;
         }
 
-        public PlayerState Poll(float clientTime)
+        /// <summary>
+        /// Interpolate remote players (their representation on the client) and return the current playerstate
+        /// for the main local player.
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="clientTime"></param>
+        /// <returns></returns>
+        public WorldState Poll(int clientId, float clientTime)
         {
             if (SynchronizeState != ClientSynchronizeState.Synchronized)
                 return null;
@@ -44,12 +51,27 @@ namespace Network
             }
             if (clientTime >= _buffer[NextSnapshot].TimeStamp)
                 _buffer.RemoveAt(CurrentSnapshot);
-            var snapshotDeltaTime = _buffer[NextSnapshot].TimeStamp - _buffer[CurrentSnapshot].TimeStamp;
-            var snapshotDeltaStatePosition = _buffer[NextSnapshot].PlayerState.Position -
-                                     _buffer[CurrentSnapshot].PlayerState.Position;
-            var deltaTime = clientTime - _buffer[CurrentSnapshot].TimeStamp;
-            var interpolatedPosition = (snapshotDeltaStatePosition / snapshotDeltaTime) * (deltaTime) + _buffer[CurrentSnapshot].PlayerState.Position;
-            return new PlayerState(interpolatedPosition);
+            WorldState worldState = new WorldState();
+            foreach (var player in _buffer[CurrentSnapshot].WorldState.Players)
+            {
+                if (player.Key == clientId)
+                {
+                    worldState.Players[clientId] = _buffer[CurrentSnapshot].WorldState.Players[clientId];
+                }
+                else
+                {
+                    var snapshotDeltaTime = _buffer[NextSnapshot].TimeStamp - _buffer[CurrentSnapshot].TimeStamp;
+                    var snapshotDeltaStatePosition = _buffer[NextSnapshot].WorldState.Players[player.Key].Position -
+                                                     _buffer[CurrentSnapshot].WorldState.Players[player.Key].Position;
+                    var deltaTime = clientTime - _buffer[CurrentSnapshot].TimeStamp;
+                    var interpolatedPosition = 
+                        (snapshotDeltaStatePosition / snapshotDeltaTime) * (deltaTime) + _buffer[CurrentSnapshot].WorldState.Players[player.Key].Position;
+                    worldState.Players[player.Key] = new PlayerState(interpolatedPosition);
+                }
+            }
+            return worldState;
         }
+
+        public int Tick => _buffer[CurrentSnapshot].Tick;
     }
 }

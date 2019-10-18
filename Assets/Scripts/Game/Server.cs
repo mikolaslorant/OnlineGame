@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Numerics;
 using Game;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Network
@@ -20,8 +17,10 @@ namespace Network
         private Connection _connection;
         private IDictionary<int, ConnectionInfo> _connectionsTable;
         private PacketProcessor _packetProcessor;
+        // Server game state
         private float _currentTime;
         private const int ServerId = 0;
+        // Contains the states of the clients ordered by client Id
         private IDictionary<int, ClientRepresentationOnServer> _clientStates;
 
         void Start()
@@ -31,7 +30,9 @@ namespace Network
             _clientStates = new Dictionary<int, ClientRepresentationOnServer>();
             _packetProcessor = new PacketProcessor(_connection, _connectionsTable);
             _connectionsTable.Add(1, new ConnectionInfo(1, "localhost", 2000));
-            _clientStates.Add(1, new ClientRepresentationOnServer(characterControllers[0], new PlayerState(characterControllers[0].transform.position, 0)));
+            // Adding client with Id 1 state
+            _clientStates.Add(1, 
+                new ClientRepresentationOnServer(characterControllers[0], new PlayerState(characterControllers[0].transform.position), 0));
             _currentTime = 0f;
         }
 
@@ -42,6 +43,11 @@ namespace Network
             BroadCastSnapshot();
             _packetProcessor.ProcessOutput();
             _currentTime += Time.deltaTime;
+        }
+
+        private void FixedUpdate()
+        {
+            
         }
 
         private void ApplyPlayerMovements()
@@ -64,7 +70,8 @@ namespace Network
                         totalMovement += new Vector3(-1, 0, 0);
                     totalMovement *= speed;
 
-                    _clientStates[connection.ClientId].UpdateClientRepresentationOnServer(totalMovement, playerInputMessage.SequenceNumber);
+                    _clientStates[connection.ClientId].UpdateClientRepresentationOnServer(totalMovement);
+                    _clientStates[connection.ClientId].Tick = playerInputMessage.PlayerInput.Tick;
                     //characterController.Move(totalMovement);
                 }
                 totalMovement = Vector3.zero;
@@ -76,11 +83,18 @@ namespace Network
 
         private void BroadCastSnapshot()
         {
-            // Output
-            PlayerState playerState = new PlayerState(characterController.transform.position);
+            
             foreach (var connection in _connectionsTable.Values)
             {
-                SnapshotMessage snapshotMessage = new SnapshotMessage(ServerId, connection.ClientId, playerState, _currentTime);
+                // corresponding tick
+                int tick = _clientStates[connection.ClientId].Tick;
+                // player other than client
+                WorldState worldState = new WorldState();
+                foreach (var clientState in _clientStates)
+                {
+                    worldState.Players[clientState.Key] = clientState.Value.PlayerState;
+                }
+                SnapshotMessage snapshotMessage = new SnapshotMessage(ServerId, connection.ClientId, worldState, tick, _currentTime);
                 connection.SnapshotStream.AddToOutput(snapshotMessage);
             }
         }

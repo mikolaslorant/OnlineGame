@@ -1,30 +1,38 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Game;
 
-public class ClientRepresentationOnServer
+namespace Network
 {
-
-    private CharacterController _characterController;
-
-    private PlayerState _playerState;
-
-    public ClientRepresentationOnServer(CharacterController characterController, PlayerState playerState)
+    public class ClientRepresentationOnServer
     {
-        _characterController = characterController;
-        _playerState = playerState;
-    }
+        // To move client on server
+        private CharacterController _characterController;
+        // To build worldstate
+        private PlayerState _playerState;
+        // To keep track of client inputs
+        private int _tick;
 
-    public void UpdateClientRepresentationOnServer(Vector3 newControllerPosition, long sequenceNumber)
-    {
-        _characterController.Move(newControllerPosition);
-        _playerState = new PlayerState(characterController.transform.position, sequenceNumber);
-    }
+        public int Tick
+        {
+            get => _tick;
+            set => _tick = value;
+        }
 
-    public void UpdateClientRepresentationOnServer(Vector3 newControllerPosition)
-    {
-        _characterController.Move(newControllerPosition);
-        _playerState = new PlayerState(characterController.transform.position, _playerState.SequenceNumber);
+        public ClientRepresentationOnServer(CharacterController characterController, PlayerState playerState, int tick)
+        {
+            _characterController = characterController;
+            _playerState = playerState;
+            _tick = tick;
+        }
+
+        public void UpdateClientRepresentationOnServer(Vector3 newControllerPosition)
+        {
+            _characterController.Move(newControllerPosition);
+            _playerState = new PlayerState(_characterController.transform.position);
+        }
+
+        
+        public PlayerState PlayerState => _playerState;
+        public CharacterController CharacterController => _characterController;
     }
 }
