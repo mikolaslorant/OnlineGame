@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Game;
+using Helpers;
 using UnityEngine;
 using Vector3 = UnityEngine.Vector3;
 
@@ -10,7 +12,6 @@ namespace Network
         // Game rules
         public List<CharacterController> characterControllers;
         public float speed;
-        public float gravity;
 
         // Network
         public int listenPort;
@@ -39,15 +40,16 @@ namespace Network
         void Update()
         {
             _packetProcessor.ProcessInput();
-            ApplyPlayerMovements();
+            
             BroadCastSnapshot();
             _packetProcessor.ProcessOutput();
+            // TODO: check time deltas. Deberia estar asociado al momento de la simulación o al momento en que se manda el paquete.
             _currentTime += Time.deltaTime;
         }
 
         private void FixedUpdate()
         {
-            
+            ApplyPlayerMovements();
         }
 
         private void ApplyPlayerMovements()
@@ -56,34 +58,17 @@ namespace Network
             {
                 // Input
                 List<Message> playerInputsReceived = connection.InputStream.GetMessagesReceived();
-                Vector3 totalMovement = new Vector3();
                 foreach (var message in playerInputsReceived)
                 {
-                    var playerInputMessage = (PlayerInputMessage) message;
-                    if (playerInputMessage.PlayerInput.GetKeyDown(KeyCode.UpArrow))
-                        totalMovement += new Vector3(0, 0, 1);
-                    if (playerInputMessage.PlayerInput.GetKeyDown(KeyCode.DownArrow))
-                        totalMovement += new Vector3(0, 0, -1);
-                    if (playerInputMessage.PlayerInput.GetKeyDown(KeyCode.RightArrow))
-                        totalMovement += new Vector3(1, 0, 0);
-                    if (playerInputMessage.PlayerInput.GetKeyDown(KeyCode.LeftArrow))
-                        totalMovement += new Vector3(-1, 0, 0);
-                    totalMovement *= speed;
-
-                    _clientStates[connection.ClientId].UpdateClientRepresentationOnServer(totalMovement);
-                    _clientStates[connection.ClientId].Tick = playerInputMessage.PlayerInput.Tick;
-                    //characterController.Move(totalMovement);
+                    var playerInput = ((PlayerInputMessage) message).PlayerInput;
+                    _clientStates[connection.ClientId].UpdateClientRepresentationOnServer(PlayerInput.GetMovement(playerInput) * speed);
+                    _clientStates[connection.ClientId].Tick = playerInput.Tick;
                 }
-                totalMovement = Vector3.zero;
-                totalMovement.y -= 0.5f * gravity;
-                _clientStates[connection.ClientId].UpdateClientRepresentationOnServer(totalMovement);
-                //characterController.Move(totalMovement);
             }
         }
 
         private void BroadCastSnapshot()
         {
-            
             foreach (var connection in _connectionsTable.Values)
             {
                 // corresponding tick

@@ -60,6 +60,20 @@ namespace Helpers
             return playerInput;
         }
 
+        public static Vector3 GetMovement(PlayerInput playerInput)
+        {
+            var totalMovement = new Vector3();
+            if (playerInput.GetKeyDown(KeyCode.UpArrow))
+                totalMovement += new Vector3(0, 0, 1);
+            if (playerInput.GetKeyDown(KeyCode.DownArrow))
+                totalMovement += new Vector3(0, 0, -1);
+            if (playerInput.GetKeyDown(KeyCode.RightArrow))
+                totalMovement += new Vector3(1, 0, 0);
+            if (playerInput.GetKeyDown(KeyCode.LeftArrow))
+                totalMovement += new Vector3(-1, 0, 0);
+            return totalMovement;
+        }
+
         public byte Bitmap => _bitmap;
         public int Tick => _tick;
     }

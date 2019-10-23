@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Game;
 using Helpers;
+using Network.ClientTools;
 using Network.Enums;
 using UnityEngine;
 
@@ -14,8 +13,7 @@ namespace Network
         public IDictionary<int, GameObject> players; // other players
         public CharacterController characterController; // client
         public float speed;
-        public float gravity;
-        
+
         // Network
         public int clientId;
         private const int ServerId = 0;
@@ -28,12 +26,12 @@ namespace Network
         private PacketProcessor _packetProcessor;
         private ConnectionInfo _serverInfo;
         
-        //  Client game state
+        // Interpolation buffer
         private InterpolationBuffer _interpolationBuffer;
         private float _currentTime;
-        // Clients input tick
+        // Prediction
+        private ClientSidePredictor _clientSidePredictor;
         private int _tick;
-        private List<PlayerInput> _playerInputs;
        
 
         void Start()
@@ -44,6 +42,7 @@ namespace Network
             _connectionsTable.Add(_serverInfo.ClientId, _serverInfo);
             _packetProcessor = new PacketProcessor(_connection, _connectionsTable);
             _interpolationBuffer = new InterpolationBuffer();
+            _clientSidePredictor = new ClientSidePredictor(characterController, speed);
             _tick = 0;
         }
 
@@ -61,19 +60,20 @@ namespace Network
         void FixedUpdate()
         {
             // Output
-            PlayerInput playerInput = PlayerInput.GetPlayerInput(_tick++);
+            PlayerInput playerInput = PlayerInput.GetPlayerInput(_tick);
             if (playerInput.Bitmap != 0)
             {
+                _clientSidePredictor.UpdatePlayerState(playerInput);
                 PlayerInputMessage playerInputMessage = new PlayerInputMessage(clientId, ServerId, playerInput);
                 _serverInfo.InputStream.AddToOutput(playerInputMessage);
+                _tick++;
             }
-            _playerInputs.Add(playerInput);
-            UpdatePlayerStateWithPrediction();
         }
 
         private void UpdateWorldStateWithSnapshot()
         {
             List<Message> messages = _serverInfo.SnapshotStream.GetMessagesReceived();
+            // Add to interpolation buffer.
             if (messages.Count > 0)
             {
                 SnapshotMessage snapshotMessage = (SnapshotMessage) messages[0];
@@ -82,12 +82,10 @@ namespace Network
                     _currentTime = snapshotMessage.TimeStamp;
                     _interpolationBuffer.SynchronizeState = ClientSynchronizeState.Buffering;
                 }
-
                 _interpolationBuffer.Add(snapshotMessage);
             }
-
+            // Apply interpolated state and correct prediction.
             WorldState worldState = _interpolationBuffer.Poll(clientId, _currentTime);
-            int serverTick = _interpolationBuffer.Tick;
             if (worldState != null)
             {
                 foreach (var player in worldState.Players)
@@ -99,30 +97,10 @@ namespace Network
                     }
                     else
                     {
-                        foreach (var inputs in _playerInputs)
-                        {
-                            
-                        }
+                        _clientSidePredictor.CorrectPlayerState(player.Value, _interpolationBuffer.Tick);
                     }
                 }
             }
-        }
-
-        public void UpdatePlayerStateWithPrediction()
-        {
-            PlayerInput playerInput = _playerInputs.Last();
-            var totalMovement = new Vector3(0,0,0);
-            if (playerInput.GetKeyDown(KeyCode.UpArrow))
-                totalMovement += new Vector3(0, 0, 1);
-            if (playerInput.GetKeyDown(KeyCode.DownArrow))
-                totalMovement += new Vector3(0, 0, -1);
-            if (playerInput.GetKeyDown(KeyCode.RightArrow))
-                totalMovement += new Vector3(1, 0, 0);
-            if (playerInput.GetKeyDown(KeyCode.LeftArrow))
-                totalMovement += new Vector3(-1, 0, 0);
-            totalMovement *= speed;
-            totalMovement.y -= 0.5f * gravity;
-            characterController.Move(totalMovement);
         }
     }
 }
