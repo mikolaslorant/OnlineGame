@@ -61,7 +61,7 @@ namespace Network
         {
             // Output
             PlayerInput playerInput = PlayerInput.GetPlayerInput(_tick);
-            if (playerInput.Bitmap != 0)
+            if (playerInput.Bitmap != 0 || playerInput.MouseXAxis != 0 || playerInput.MouseYAxis != 0)
             {
                 _clientSidePredictor.UpdatePlayerState(playerInput);
                 PlayerInputMessage playerInputMessage = new PlayerInputMessage(clientId, ServerId, playerInput);

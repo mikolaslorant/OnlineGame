@@ -6,10 +6,14 @@ namespace Helpers
     {
         private byte _bitmap;
         private int _tick;
+        private float _mouseXAxis;
+        private float _mouseYAxis;
 
-        public PlayerInput(byte bitmap, int tick)
+        public PlayerInput(byte bitmap, float mouseXAxis, float mouseYAxis, int tick)
         {
             _bitmap = bitmap;
+            _mouseXAxis = mouseXAxis;
+            _mouseYAxis = mouseYAxis;
             _tick = tick;
         }
 
@@ -18,13 +22,17 @@ namespace Helpers
             // TODO: add constants for input numbers.
             switch (keyCode)
             {
-                case KeyCode.UpArrow: _bitmap |= 1;
+                case KeyCode.W: _bitmap |= 1;
                     break;
-                case KeyCode.DownArrow: _bitmap |= 1 << 1;
+                case KeyCode.S: _bitmap |= 1 << 1;
                     break;
-                case KeyCode.LeftArrow: _bitmap |= 1 << 2;
+                case KeyCode.A: _bitmap |= 1 << 2;
                     break;
-                case KeyCode.RightArrow: _bitmap |= 1 << 3;
+                case KeyCode.D: _bitmap |= 1 << 3;
+                    break;
+                case KeyCode.Space: _bitmap |= 1 << 4;
+                    break;
+                case KeyCode.LeftShift: _bitmap |= 1 << 5;
                     break;
             }
         }
@@ -33,14 +41,18 @@ namespace Helpers
         {
             switch (keyCode)
             {
-                case KeyCode.UpArrow: 
+                case KeyCode.W: 
                     return (_bitmap & 1) > 0;
-                case KeyCode.DownArrow: 
+                case KeyCode.S: 
                     return (_bitmap & (1 << 1)) > 0;
-                case KeyCode.LeftArrow: 
+                case KeyCode.A: 
                     return (_bitmap & (1 << 2)) > 0;
-                case KeyCode.RightArrow: 
+                case KeyCode.D: 
                     return (_bitmap & (1 << 3)) > 0;
+                case KeyCode.Space:
+                    return (_bitmap & (1 << 4)) > 0;
+                case KeyCode.LeftShift:
+                    return (_bitmap & (1 << 5)) > 0;
                 default: 
                     return false;
             }
@@ -48,33 +60,50 @@ namespace Helpers
         
         public static PlayerInput GetPlayerInput(int tick)
         {
-            PlayerInput playerInput = new PlayerInput(0, tick);
-            if (Input.GetKey(KeyCode.UpArrow))
-                playerInput.AddKey(KeyCode.UpArrow);
-            if (Input.GetKey(KeyCode.DownArrow))
-                playerInput.AddKey(KeyCode.DownArrow);
-            if (Input.GetKey(KeyCode.RightArrow))
-                playerInput.AddKey(KeyCode.RightArrow);
-            if (Input.GetKey(KeyCode.LeftArrow))
-                playerInput.AddKey(KeyCode.LeftArrow);
+            PlayerInput playerInput = new PlayerInput(0, 0, 0, tick);
+
+            if (Input.GetKey(KeyCode.W))
+                playerInput.AddKey(KeyCode.W);
+            if (Input.GetKey(KeyCode.S))
+                playerInput.AddKey(KeyCode.S);
+            if (Input.GetKey(KeyCode.D))
+                playerInput.AddKey(KeyCode.D);
+            if (Input.GetKey(KeyCode.A))
+                playerInput.AddKey(KeyCode.A);
+            if (Input.GetKey(KeyCode.Space))
+                playerInput.AddKey(KeyCode.Space);
+            if (Input.GetKey(KeyCode.LeftShift))
+                playerInput.AddKey(KeyCode.LeftShift);
+
+            playerInput._mouseXAxis = Input.GetAxis("Mouse X");
+            playerInput._mouseYAxis = Input.GetAxis("Mouse Y");
+
             return playerInput;
         }
 
-        public static Vector3 GetMovement(PlayerInput playerInput)
+        //Here we use the character controller to calculate the movement relative to the controller orientation
+        public static Vector3 GetMovement(PlayerInput playerInput, CharacterController characterController)
         {
             var totalMovement = new Vector3();
-            if (playerInput.GetKeyDown(KeyCode.UpArrow))
-                totalMovement += new Vector3(0, 0, 1);
-            if (playerInput.GetKeyDown(KeyCode.DownArrow))
-                totalMovement += new Vector3(0, 0, -1);
-            if (playerInput.GetKeyDown(KeyCode.RightArrow))
-                totalMovement += new Vector3(1, 0, 0);
-            if (playerInput.GetKeyDown(KeyCode.LeftArrow))
-                totalMovement += new Vector3(-1, 0, 0);
+            if (playerInput.GetKeyDown(KeyCode.W))
+                totalMovement += characterController.transform.forward;
+            if (playerInput.GetKeyDown(KeyCode.S))
+                totalMovement -= characterController.transform.forward;
+            if (playerInput.GetKeyDown(KeyCode.D))
+                totalMovement += characterController.transform.right;
+            if (playerInput.GetKeyDown(KeyCode.A))
+                totalMovement -= characterController.transform.right;
+            if (playerInput.GetKeyDown(KeyCode.Space))
+                totalMovement += new Vector3(0, 1, 0);
+            if (playerInput.GetKeyDown(KeyCode.LeftShift))
+                totalMovement += new Vector3(0, -1, 0);
+
             return totalMovement;
         }
 
         public byte Bitmap => _bitmap;
         public int Tick => _tick;
+        public float MouseXAxis => _mouseXAxis;
+        public float MouseYAxis => _mouseYAxis;
     }
 }

@@ -25,9 +25,10 @@ namespace Network
             _tick = tick;
         }
 
-        public void UpdateClientRepresentationOnServer(Vector3 newControllerPosition)
+        public void UpdateClientRepresentationOnServer(Vector3 newControllerPosition, Vector3 newControllerRotation)
         {
             _characterController.Move(newControllerPosition);
+            _characterController.transform.Rotate(newControllerRotation);
             _playerState = new PlayerState(_characterController.transform.position);
         }
 

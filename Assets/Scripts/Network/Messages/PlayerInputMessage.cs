@@ -28,6 +28,8 @@ namespace Network
                     writer.Write(ReceiverId);
                     writer.Write((int) Type());
                     writer.Write(_playerInput.Bitmap);
+                    writer.Write(_playerInput.MouseXAxis);
+                    writer.Write(PlayerInput.MouseYAxis);
                     writer.Write(_playerInput.Tick);
                 }
                 return m.ToArray();

@@ -29,7 +29,7 @@ namespace Network.ClientTools
             _predictorDummy.transform.position = playerState.Position;
             foreach (var playerInput in _playerInputs)
             {
-                var movement = PlayerInput.GetMovement(playerInput);
+                var movement = PlayerInput.GetMovement(playerInput, _predictorDummy);
                 var movementAfterSpeed = movement * _speed;
                 //_predictorDummy.Move(movementAfterSpeed);
                 _predictorDummy.transform.position += movementAfterSpeed;
@@ -46,7 +46,8 @@ namespace Network.ClientTools
         public void UpdatePlayerState(PlayerInput playerInput)
         {
             _playerInputs.Add(playerInput);
-            _characterController.Move(PlayerInput.GetMovement(playerInput) * _speed);
+            _characterController.Move(PlayerInput.GetMovement(playerInput, _characterController) * _speed);
+            _characterController.transform.Rotate(new Vector3(playerInput.MouseYAxis, playerInput.MouseXAxis, 0) * _speed);
         }
         
         private void RemoveAppliedPlayerTicks(int tick)

@@ -25,7 +25,7 @@ namespace Network
                             message = new AckMessage(id, senderId, receiverId, ackType);
                             break;
                         case MessageType.Input:
-                            PlayerInput playerInput = new PlayerInput(reader.ReadByte(), reader.ReadInt32());
+                            PlayerInput playerInput = new PlayerInput(reader.ReadByte(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadInt32());
                             message = new PlayerInputMessage(id, senderId, receiverId, playerInput);
                             break;
                         case MessageType.Snapshot:
