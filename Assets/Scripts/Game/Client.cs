@@ -68,6 +68,12 @@ namespace Network
                 _serverInfo.InputStream.AddToOutput(playerInputMessage);
                 _tick++;
             }
+
+            var clientStateFromSnapshot = _interpolationBuffer.PollClient(clientId, _currentTime);
+            if (clientStateFromSnapshot != null)
+            {
+                _clientSidePredictor.CorrectPlayerState(clientStateFromSnapshot, _interpolationBuffer.Tick);
+            }
         }
 
         private void UpdateWorldStateWithSnapshot()
@@ -94,10 +100,6 @@ namespace Network
                     if (player.Key != clientId)
                     {
                         players[player.Key].transform.position = player.Value.Position; // setting interpolated position
-                    }
-                    else
-                    {
-                        _clientSidePredictor.CorrectPlayerState(player.Value, _interpolationBuffer.Tick);
                     }
                 }
             }

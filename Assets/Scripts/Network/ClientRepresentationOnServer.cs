@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Runtime.CompilerServices;
+using UnityEngine;
 using Game;
 
 namespace Network
@@ -25,11 +26,11 @@ namespace Network
             _tick = tick;
         }
 
-        public void UpdateClientRepresentationOnServer(Vector3 newControllerPosition, Vector3 newControllerRotation)
+        public void UpdateClientRepresentationOnServer(Vector3 newControllerMovement, Vector3 newControllerRotation)
         {
-            _characterController.Move(newControllerPosition);
+            _characterController.Move(newControllerMovement);
             _characterController.transform.Rotate(newControllerRotation);
-            _playerState = new PlayerState(_characterController.transform.position);
+            _playerState.Position = _characterController.transform.position;
         }
 
         

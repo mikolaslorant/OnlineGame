@@ -2,6 +2,7 @@
 using Game;
 using Network.Enums;
 using UnityEngine;
+using UnityEngine.Experimental.PlayerLoop;
 
 namespace Network.ClientTools
 {
@@ -44,11 +45,7 @@ namespace Network.ClientTools
             WorldState worldState = new WorldState();
             foreach (var player in _buffer[CurrentSnapshot].WorldState.Players)
             {
-                if (player.Key == clientId)
-                {
-                    worldState.Players[clientId] = _buffer[CurrentSnapshot].WorldState.Players[clientId];
-                }
-                else
+                if (player.Key != clientId)
                 {
                     var snapshotDeltaTime = _buffer[NextSnapshot].TimeStamp - _buffer[CurrentSnapshot].TimeStamp;
                     var snapshotDeltaStatePosition = _buffer[NextSnapshot].WorldState.Players[player.Key].Position -
@@ -60,6 +57,20 @@ namespace Network.ClientTools
                 }
             }
             return worldState;
+        }
+
+        public PlayerState PollClient(int clientId, float clientTime)
+        {
+            if (SynchronizeState != ClientSynchronizeState.Synchronized)
+                return null;
+            if (_buffer.Count <= 1)
+            {
+                SynchronizeState = ClientSynchronizeState.Unsynchronized;
+                return null;
+            }
+            if (clientTime >= _buffer[NextSnapshot].TimeStamp)
+                _buffer.RemoveAt(CurrentSnapshot);
+            return _buffer[CurrentSnapshot].WorldState.Players[clientId];
         }
 
         public int Tick => _buffer[CurrentSnapshot].Tick;

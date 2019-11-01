@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Game;
 using Helpers;
 using UnityEngine;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Network.ClientTools
 {
     public class ClientSidePredictor
     {
-        private const float MAX_PREDICTION_ERROR = 0.1f;
-        private CharacterController _predictorDummy;
+        private const float MAX_PREDICTION_ERROR = 0.2f;
         private CharacterController _characterController;
         private List<PlayerInput> _playerInputs;
         private float _speed;
         
         public ClientSidePredictor(CharacterController characterController, float speed)
         {
-            var gameObject = new GameObject();
-            _predictorDummy = gameObject.AddComponent<CharacterController>();
             _characterController = characterController;
             _playerInputs = new List<PlayerInput>();
             _speed = speed;
@@ -26,20 +25,23 @@ namespace Network.ClientTools
         public void CorrectPlayerState(PlayerState playerState, int tick)
         {
             RemoveAppliedPlayerTicks(tick);
-            _predictorDummy.transform.position = playerState.Position;
+            var predictedPosition = new Vector3(_characterController.transform.position.x,
+                _characterController.transform.position.y, 
+                _characterController.transform.position.z);
+            _characterController.Move(playerState.Position - predictedPosition);
             foreach (var playerInput in _playerInputs)
             {
-                var movement = PlayerInput.GetMovement(playerInput, _predictorDummy);
+                var movement = PlayerInput.GetMovement(playerInput, _characterController);
                 var movementAfterSpeed = movement * _speed;
-                //_predictorDummy.Move(movementAfterSpeed);
-                _predictorDummy.transform.position += movementAfterSpeed;
+                _characterController.Move(movementAfterSpeed);
+                //_characterController.transform.position += movementAfterSpeed;
             }
-            var predictionError = (_predictorDummy.transform.position -
+            var predictionError = (predictedPosition -
                                    _characterController.transform.position);
             // If prediction does not diverge maintain same position.
-            if (HasDiverged(predictionError))
+            if (!HasDiverged(predictionError))
             {
-                _characterController.transform.position = _predictorDummy.transform.position;
+                _characterController.Move(predictionError);
             }
         }
 

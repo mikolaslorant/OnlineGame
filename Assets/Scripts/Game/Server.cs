@@ -40,7 +40,6 @@ namespace Network
         void Update()
         {
             _packetProcessor.ProcessInput();
-            
             BroadCastSnapshot();
             _packetProcessor.ProcessOutput();
             // TODO: check time deltas. Deberia estar asociado al momento de la simulación o al momento en que se manda el paquete.
@@ -61,8 +60,7 @@ namespace Network
                 foreach (var message in playerInputsReceived)
                 {
                     var playerInput = ((PlayerInputMessage) message).PlayerInput;
-                    _clientStates[connection.ClientId].UpdateClientRepresentationOnServer(PlayerInput.GetMovement(playerInput, 
-                        _clientStates[connection.ClientId].CharacterController) * speed,
+                    _clientStates[connection.ClientId].UpdateClientRepresentationOnServer(PlayerInput.GetMovement(playerInput, _clientStates[connection.ClientId].CharacterController) * speed,
                         new Vector3(playerInput.MouseYAxis, playerInput.MouseXAxis, 0) * speed);
                     _clientStates[connection.ClientId].Tick = playerInput.Tick;
                 }
