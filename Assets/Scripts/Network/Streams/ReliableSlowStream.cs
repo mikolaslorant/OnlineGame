@@ -61,10 +61,13 @@ namespace Network.Streams
             {
                 long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
                 if (messageWithTimeout.Milliseconds == 0 || milliseconds - messageWithTimeout.Milliseconds > TimeoutMs)
-                    messagesToSend.Add(messageWithTimeout.Message);
-                if (messageWithTimeout.Message.Type() != MessageType.ACK)
                 {
                     messageWithTimeout.Milliseconds = milliseconds;
+                    messagesToSend.Add(messageWithTimeout.Message);
+                }
+                if (messageWithTimeout.Message.Type() != MessageType.ACK)
+                {
+                    
                     newOutStream.Add(messageWithTimeout);
                 }
             }
@@ -77,7 +80,7 @@ namespace Network.Streams
         {
             return Reliability.ReliableSlow;
         }
-
+        
         private class MessageWithTimeout
         {
             public MessageWithTimeout(Message message)

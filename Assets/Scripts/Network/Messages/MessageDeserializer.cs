@@ -41,6 +41,12 @@ namespace Network
                             float timeStamp = reader.ReadSingle();
                             message = new SnapshotMessage(id, senderId, receiverId, worldState, tick, timeStamp);
                             break;
+                        case MessageType.ConnectionRequest:
+                            message = new ConnectionRequestMessage(id, senderId, receiverId);
+                            break;
+                        case MessageType.ConnectionResponse:
+                            message = new ConnectionResponseMessage(id, senderId, receiverId);
+                            break;
                     }
                 }
             }

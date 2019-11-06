@@ -31,10 +31,7 @@ namespace Network.ClientTools
             _characterController.Move(playerState.Position - predictedPosition);
             foreach (var playerInput in _playerInputs)
             {
-                var movement = PlayerInput.GetMovement(playerInput, _characterController);
-                var movementAfterSpeed = movement * _speed;
-                _characterController.Move(movementAfterSpeed);
-                //_characterController.transform.position += movementAfterSpeed;
+                _characterController.Move(PlayerInput.GetMovement(playerInput, _characterController) * this._speed);
             }
             var predictionError = (predictedPosition -
                                    _characterController.transform.position);

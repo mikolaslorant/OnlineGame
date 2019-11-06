@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using Game;
 using Helpers;
 using UnityEngine;
@@ -9,40 +10,36 @@ namespace Network
 {
     public class Server : MonoBehaviour
     {
+        private const string _serverLayer = "Server";
         // Game rules
-        public List<CharacterController> characterControllers;
         public float speed;
-
+        public GameObject characterPrefab;
         // Network
         public int listenPort;
         private Connection _connection;
-        private IDictionary<int, ConnectionInfo> _connectionsTable;
+        private IDictionary<IPAddress, ConnectionInfo> _connectionsTable;
         private PacketProcessor _packetProcessor;
         // Server game state
         private float _currentTime;
         private const int ServerId = 0;
         // Contains the states of the clients ordered by client Id
-        private IDictionary<int, ClientRepresentationOnServer> _clientStates;
+        private IDictionary<int, ClientRepresentation> _clientStates;
 
         void Start()
         {
             _connection = new Connection(listenPort);
-            _connectionsTable = new Dictionary<int, ConnectionInfo>();
-            _clientStates = new Dictionary<int, ClientRepresentationOnServer>();
+            _connectionsTable = new Dictionary<IPAddress, ConnectionInfo>();
+            _clientStates = new Dictionary<int, ClientRepresentation>();
             _packetProcessor = new PacketProcessor(_connection, _connectionsTable);
-            _connectionsTable.Add(1, new ConnectionInfo(1, "localhost", 2000));
-            // Adding client with Id 1 state
-            _clientStates.Add(1, 
-                new ClientRepresentationOnServer(characterControllers[0], new PlayerState(characterControllers[0].transform.position), 0));
             _currentTime = 0f;
         }
 
         void Update()
         {
             _packetProcessor.ProcessInput();
+            CheckIncomingConnectionRequests();
             BroadCastSnapshot();
             _packetProcessor.ProcessOutput();
-            // TODO: check time deltas. Deberia estar asociado al momento de la simulación o al momento en que se manda el paquete.
             _currentTime += Time.deltaTime;
         }
 
@@ -60,7 +57,7 @@ namespace Network
                 foreach (var message in playerInputsReceived)
                 {
                     var playerInput = ((PlayerInputMessage) message).PlayerInput;
-                    _clientStates[connection.ClientId].UpdateClientRepresentationOnServer(PlayerInput.GetMovement(playerInput, _clientStates[connection.ClientId].CharacterController) * speed,
+                    _clientStates[connection.ClientId].UpdateClientRepresentation(PlayerInput.GetMovement(playerInput, _clientStates[connection.ClientId].CharacterController) * speed,
                         new Vector3(playerInput.MouseYAxis, playerInput.MouseXAxis, 0) * speed);
                     _clientStates[connection.ClientId].Tick = playerInput.Tick;
                 }
@@ -81,6 +78,25 @@ namespace Network
                 }
                 SnapshotMessage snapshotMessage = new SnapshotMessage(ServerId, connection.ClientId, worldState, tick, _currentTime);
                 connection.SnapshotStream.AddToOutput(snapshotMessage);
+            }
+        }
+
+        private void CheckIncomingConnectionRequests()
+        {
+            foreach (var connection in _connectionsTable.Values)
+            {
+                List<Message> messages = connection.ConnectionRequestStream.GetMessagesReceived();
+                if (messages.Count > 0 && !_clientStates.ContainsKey(connection.ClientId))
+                {
+                    ConnectionRequestMessage connectionRequestMessage = (ConnectionRequestMessage) messages[0];
+                    // instance new player;
+                    var newPlayer = Instantiate(characterPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                    var  characterController =  newPlayer.AddComponent<CharacterController>();
+                    // added to the client representation map
+                    _clientStates[connection.ClientId] = new ClientRepresentation(newPlayer, characterController, new PlayerState(characterController.transform.position), 0);
+                    // return connection response message to new player
+                    connection.ConnectionResponseStream.AddToOutput(new ConnectionResponseMessage(ServerId, connection.ClientId));
+                }
             }
         }
     }

@@ -4,12 +4,13 @@ using Game;
 
 namespace Network
 {
-    public class ClientRepresentationOnServer
+    public class ClientRepresentation
     {
+        private readonly GameObject _playerPrefab;
         // To move client on server
-        private CharacterController _characterController;
+        private readonly CharacterController _characterController;
         // To build worldstate
-        private PlayerState _playerState;
+        private readonly PlayerState _playerState;
         // To keep track of client inputs
         private int _tick;
 
@@ -19,21 +20,21 @@ namespace Network
             set => _tick = value;
         }
 
-        public ClientRepresentationOnServer(CharacterController characterController, PlayerState playerState, int tick)
+        public ClientRepresentation(GameObject playerPrefab, CharacterController characterController, PlayerState playerState, int tick)
         {
+            _playerPrefab = playerPrefab;
             _characterController = characterController;
             _playerState = playerState;
             _tick = tick;
         }
 
-        public void UpdateClientRepresentationOnServer(Vector3 newControllerMovement, Vector3 newControllerRotation)
+        public void UpdateClientRepresentation(Vector3 newControllerMovement, Vector3 newControllerRotation)
         {
             _characterController.Move(newControllerMovement);
             _characterController.transform.Rotate(newControllerRotation);
             _playerState.Position = _characterController.transform.position;
         }
 
-        
         public PlayerState PlayerState => _playerState;
         public CharacterController CharacterController => _characterController;
     }

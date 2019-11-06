@@ -55,6 +55,11 @@ namespace Network.ClientTools
                         (snapshotDeltaStatePosition / snapshotDeltaTime) * (deltaTime) + _buffer[CurrentSnapshot].WorldState.Players[player.Key].Position;
                     worldState.Players[player.Key] = new PlayerState(interpolatedPosition);
                 }
+                else
+                {
+                    worldState.Players[player.Key] = new PlayerState(player.Value.Position);
+                }
+
             }
             return worldState;
         }

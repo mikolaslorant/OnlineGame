@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using Network.Streams;
 using UnityEngine;
 
@@ -6,29 +7,31 @@ namespace Network
 {
     public class PacketProcessor
     {
+        private int _idCounter;
         private readonly Connection _connection;
+        private readonly IDictionary<IPAddress, ConnectionInfo> _connectionsTable;
 
-        private readonly IDictionary<int, ConnectionInfo> _connectionsTable;
-
-        public PacketProcessor(Connection connection, IDictionary<int, ConnectionInfo> connectionsTable)
+        public PacketProcessor(Connection connection, IDictionary<IPAddress, ConnectionInfo> connectionsTable)
         {
             _connection = connection;
             _connectionsTable = connectionsTable;
+            _idCounter = 0;
         }
 
         public void ProcessInput()
         {
             // Input
-            byte[] data;
-            while ((data = _connection.GetData()) != null)
+            ConnectionPacket connectionPacket;
+            while ((connectionPacket = _connection.GetData()) != null)
             {
-                Message message = MessageDeserializer.Deserialize(data);
+                InitializeConnectionInfoIfNewConnection(connectionPacket);
+                Message message = MessageDeserializer.Deserialize(connectionPacket.Data);
                 Stream stream;
                 if (message.Type() == MessageType.ACK)
-                    stream = _connectionsTable[message.SenderId].Streams
+                    stream = _connectionsTable[connectionPacket.Ip].Streams
                         .Find(s => s.MessageType == ((AckMessage) message).AckType);
                 else
-                    stream = _connectionsTable[message.SenderId].Streams
+                    stream = _connectionsTable[connectionPacket.Ip].Streams
                         .Find(s => s.MessageType == message.Type());
                 stream.AddToInput(message);
             }
@@ -46,6 +49,14 @@ namespace Network
                         _connection.SendData(message.Serialize(), connection.Hostname, connection.Port);
                     }
                 }
+            }
+        }
+
+        private void InitializeConnectionInfoIfNewConnection(ConnectionPacket connectionPacket)
+        {
+            if (!_connectionsTable.ContainsKey(connectionPacket.Ip))
+            {
+                _connectionsTable[connectionPacket.Ip] = new ConnectionInfo(++_idCounter, connectionPacket.Ip.ToString(), connectionPacket.Port);
             }
         }
     }
