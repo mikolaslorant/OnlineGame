@@ -14,7 +14,8 @@ namespace Network
         private IDictionary<int, GameObject> _players; // other players
         private CharacterController _characterController; // client
         public float speed;
-        public GameObject characterPrefab;
+        public GameObject mainCharacterPrefab;
+        public GameObject otherCharacterPrefab;
 
         // Network
         private bool _connected;
@@ -122,13 +123,18 @@ namespace Network
                     if (!_players.ContainsKey(player.Key))
                     {
                         // instance new player;
-                        var newPlayer = Instantiate(characterPrefab, player.Value.Position, Quaternion.identity);
-                        _players[player.Key] = newPlayer;
+                        GameObject newPlayer;
                         if (player.Key == _clientId)
                         {
+                            newPlayer = Instantiate(mainCharacterPrefab, player.Value.Position, Quaternion.identity);
                             _characterController =  newPlayer.AddComponent<CharacterController>();
                             _clientSidePredictor = new ClientSidePredictor(_characterController, speed);
                         }
+                        else
+                        {
+                            newPlayer = Instantiate(otherCharacterPrefab, player.Value.Position, Quaternion.identity);
+                        }
+                        _players[player.Key] = newPlayer;
                     }
                     // Only remote players
                     else if (player.Key != _clientId)

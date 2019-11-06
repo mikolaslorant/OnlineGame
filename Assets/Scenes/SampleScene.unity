@@ -241,7 +241,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0.2
-  characterPrefab: {fileID: 343451022495772648, guid: ae18a3844d32f874a8e52dba9f7d5c57,
+  mainCharacterPrefab: {fileID: 343451022495772648, guid: ae18a3844d32f874a8e52dba9f7d5c57,
+    type: 3}
+  otherCharacterPrefab: {fileID: 9153303480131848527, guid: 4ea33aa4730783a4e9a36bd8d56d982c,
     type: 3}
   hostname: 127.0.0.1
   port: 7000
