@@ -3,7 +3,11 @@ namespace Network
 {
     public abstract class Message
     {
-        public Message() {}
+        public Message()
+        {
+            this.SenderId = 0;
+            this.ReceiverId = 0;
+        }
 
         public Message(int senderId, int receiverId)
         {

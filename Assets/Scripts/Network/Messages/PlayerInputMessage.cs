@@ -7,6 +7,8 @@ namespace Network
     {
         private readonly PlayerInput _playerInput;
 
+        private readonly long _sequenceNumber;
+
         public PlayerInputMessage(int senderId, int receiverId, PlayerInput playerInput) : base(senderId, receiverId)
         {
             _playerInput = playerInput;
@@ -26,6 +28,9 @@ namespace Network
                     writer.Write(ReceiverId);
                     writer.Write((int) Type());
                     writer.Write(_playerInput.Bitmap);
+                    writer.Write(_playerInput.MouseXAxis);
+                    writer.Write(PlayerInput.MouseYAxis);
+                    writer.Write(_playerInput.Tick);
                 }
                 return m.ToArray();
             }

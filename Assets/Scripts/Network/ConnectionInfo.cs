@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Network.Streams;
 
 namespace Network
 {
@@ -18,7 +19,9 @@ namespace Network
             this._streams = new List<Stream>()
             {
                 new UnreliableStream(MessageType.Snapshot), 
-                new ReliableFastStream(MessageType.Input)
+                new ReliableFastStream(MessageType.Input),
+                new ReliableSlowStream(MessageType.ConnectionRequest),
+                new ReliableSlowStream(MessageType.ConnectionResponse),
             };
         }
 
@@ -29,5 +32,7 @@ namespace Network
 
         public Stream SnapshotStream => _streams[0];
         public Stream InputStream => _streams[1];
+        public Stream ConnectionRequestStream => _streams[2];
+        public Stream ConnectionResponseStream => _streams[3];
     }
 }
