@@ -33,6 +33,7 @@ namespace Network
             _characterController.Move(newControllerMovement);
             _characterController.transform.Rotate(newControllerRotation);
             _playerState.Position = _characterController.transform.position;
+            _playerState.Rotation = _characterController.transform.rotation;
         }
 
         public PlayerState PlayerState => _playerState;

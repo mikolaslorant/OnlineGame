@@ -35,7 +35,8 @@ namespace Network
                             {
                                 int playerId = reader.ReadInt32();
                                 worldState.Players[playerId] 
-                                    = new PlayerState(new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
+                                    = new PlayerState(new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()), 
+                                                      new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
                             }
                             int tick = reader.ReadInt32();
                             float timeStamp = reader.ReadSingle();

@@ -93,7 +93,8 @@ namespace Network
                     var newPlayer = Instantiate(characterPrefab, new Vector3(0, 0, 0), Quaternion.identity);
                     var  characterController =  newPlayer.AddComponent<CharacterController>();
                     // added to the client representation map
-                    _clientStates[connection.ClientId] = new ClientRepresentation(newPlayer, characterController, new PlayerState(characterController.transform.position), 0);
+                    _clientStates[connection.ClientId] = new ClientRepresentation(newPlayer, characterController, 
+                        new PlayerState(characterController.transform.position, characterController.transform.rotation), 0);
                     // return connection response message to new player
                     connection.ConnectionResponseStream.AddToOutput(new ConnectionResponseMessage(ServerId, connection.ClientId));
                 }

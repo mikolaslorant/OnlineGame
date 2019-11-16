@@ -4,6 +4,7 @@ using System.Numerics;
 using Game;
 using Helpers;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Network.ClientTools
@@ -25,9 +26,9 @@ namespace Network.ClientTools
         public void CorrectPlayerState(PlayerState playerState, int tick)
         {
             RemoveAppliedPlayerTicks(tick);
-            var predictedPosition = new Vector3(_characterController.transform.position.x,
-                _characterController.transform.position.y, 
-                _characterController.transform.position.z);
+
+            var predictedPosition = _characterController.transform.position;
+
             _characterController.Move(playerState.Position - predictedPosition);
             foreach (var playerInput in _playerInputs)
             {

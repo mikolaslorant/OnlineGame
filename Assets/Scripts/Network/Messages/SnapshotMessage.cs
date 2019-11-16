@@ -41,6 +41,11 @@ namespace Network
                         writer.Write(player.Value.Position.x);
                         writer.Write(player.Value.Position.y);
                         writer.Write(player.Value.Position.z);
+                        writer.Write(player.Value.Rotation.x);
+                        writer.Write(player.Value.Rotation.y);
+                        writer.Write(player.Value.Rotation.z);
+                        writer.Write(player.Value.Rotation.w);
+
                     }
                     writer.Write(_tick);
                     writer.Write(_timeStamp);

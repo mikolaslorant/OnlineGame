@@ -42,22 +42,32 @@ namespace Network.ClientTools
             }
             if (clientTime >= _buffer[NextSnapshot].TimeStamp)
                 _buffer.RemoveAt(CurrentSnapshot);
+
             WorldState worldState = new WorldState();
-            foreach (var player in _buffer[CurrentSnapshot].WorldState.Players)
+            IDictionary<int, PlayerState> currentSnapshotPlayerStates = _buffer[CurrentSnapshot].WorldState.Players;
+
+            foreach (var player in currentSnapshotPlayerStates)
             {
                 if (player.Key != clientId)
                 {
                     var snapshotDeltaTime = _buffer[NextSnapshot].TimeStamp - _buffer[CurrentSnapshot].TimeStamp;
-                    var snapshotDeltaStatePosition = _buffer[NextSnapshot].WorldState.Players[player.Key].Position -
-                                                     _buffer[CurrentSnapshot].WorldState.Players[player.Key].Position;
                     var deltaTime = clientTime - _buffer[CurrentSnapshot].TimeStamp;
+
+                    var snapshotDeltaStatePosition = _buffer[NextSnapshot].WorldState.Players[player.Key].Position -
+                                                     currentSnapshotPlayerStates[player.Key].Position;
+                    var snapshotDeltaStateRotation = _buffer[NextSnapshot].WorldState.Players[player.Key].Rotation * 
+                                                    Quaternion.Inverse(currentSnapshotPlayerStates[player.Key].Rotation);
+
                     var interpolatedPosition = 
-                        (snapshotDeltaStatePosition / snapshotDeltaTime) * (deltaTime) + _buffer[CurrentSnapshot].WorldState.Players[player.Key].Position;
-                    worldState.Players[player.Key] = new PlayerState(interpolatedPosition);
+                        (snapshotDeltaStatePosition / snapshotDeltaTime) * (deltaTime) + currentSnapshotPlayerStates[player.Key].Position;
+                    var interpolatedRotation = 
+                        currentSnapshotPlayerStates[player.Key].Rotation * Quaternion.Euler((snapshotDeltaStateRotation.eulerAngles / snapshotDeltaTime) * deltaTime);
+
+                    worldState.Players[player.Key] = new PlayerState(interpolatedPosition, interpolatedRotation);
                 }
                 else
                 {
-                    worldState.Players[player.Key] = new PlayerState(player.Value.Position);
+                    worldState.Players[player.Key] = new PlayerState(player.Value.Position, player.Value.Rotation);
                 }
 
             }
