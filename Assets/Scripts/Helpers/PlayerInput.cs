@@ -34,6 +34,8 @@ namespace Helpers
                     break;
                 case KeyCode.LeftShift: _bitmap |= 1 << 5;
                     break;
+                case KeyCode.Mouse0: _bitmap |= 1 << 6;
+                    break;
             }
         }
 
@@ -53,6 +55,8 @@ namespace Helpers
                     return (_bitmap & (1 << 4)) > 0;
                 case KeyCode.LeftShift:
                     return (_bitmap & (1 << 5)) > 0;
+                case KeyCode.Mouse0:
+                    return (_bitmap & (1 << 6)) > 0;
                 default: 
                     return false;
             }
@@ -74,6 +78,8 @@ namespace Helpers
                 playerInput.AddKey(KeyCode.Space);
             if (Input.GetKey(KeyCode.LeftShift))
                 playerInput.AddKey(KeyCode.LeftShift);
+            if (Input.GetKey(KeyCode.Mouse0))
+                playerInput.AddKey(KeyCode.Mouse0);
 
             playerInput._mouseXAxis = Input.GetAxis("Mouse X");
             playerInput._mouseYAxis = Input.GetAxis("Mouse Y");

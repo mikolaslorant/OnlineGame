@@ -13,6 +13,8 @@ namespace Network
         private const string _serverLayer = "Server";
         // Game rules
         public float speed;
+        public int initialHealth;
+        public int bulletDamage;
         public GameObject characterPrefab;
         // Network
         public int listenPort;
@@ -45,10 +47,10 @@ namespace Network
 
         private void FixedUpdate()
         {
-            ApplyPlayerMovements();
+            ApplyPlayerInputs();
         }
 
-        private void ApplyPlayerMovements()
+        private void ApplyPlayerInputs()
         {
             foreach (var connection in _connectionsTable.Values)
             {
@@ -57,8 +59,15 @@ namespace Network
                 foreach (var message in playerInputsReceived)
                 {
                     var playerInput = ((PlayerInputMessage) message).PlayerInput;
-                    _clientStates[connection.ClientId].UpdateClientRepresentation(PlayerInput.GetMovement(playerInput, _clientStates[connection.ClientId].CharacterController) * speed,
+
+                    _clientStates[connection.ClientId].UpdateClientRepresentationMovement(PlayerInput.GetMovement(playerInput, _clientStates[connection.ClientId].CharacterController) * speed,
                         new Vector3(playerInput.MouseYAxis, playerInput.MouseXAxis, 0) * speed);
+
+                    if (playerInput.GetKeyDown(KeyCode.Mouse0))
+                    {
+                        ProcessAuthoritativeShoot(_clientStates[connection.ClientId].CharacterController);
+                    }
+
                     _clientStates[connection.ClientId].Tick = playerInput.Tick;
                 }
             }
@@ -94,9 +103,29 @@ namespace Network
                     var  characterController =  newPlayer.AddComponent<CharacterController>();
                     // added to the client representation map
                     _clientStates[connection.ClientId] = new ClientRepresentation(newPlayer, characterController, 
-                        new PlayerState(characterController.transform.position, characterController.transform.rotation), 0);
+                        new PlayerState(characterController.transform.position, characterController.transform.rotation, initialHealth), 0);
                     // return connection response message to new player
                     connection.ConnectionResponseStream.AddToOutput(new ConnectionResponseMessage(ServerId, connection.ClientId));
+                }
+            }
+        }
+
+        private void ProcessAuthoritativeShoot(CharacterController characterShooter)
+        {
+            Ray rayToShoot = new Ray(characterShooter.transform.position, characterShooter.transform.forward);
+            RaycastHit hit;
+
+            if(Physics.Raycast(rayToShoot, out hit))
+            {
+                //Here we look if the gameobject that was hit is another client's player
+                //A better approach would be to get the client id from the gameobject that was hit
+                foreach (var connection in _clientStates)
+                {
+                    if(connection.Value.PlayerGameObject.Equals(hit.collider.gameObject))
+                    {
+                        //Inflict bullet damage
+                        connection.Value.UpdateClientRepresentationAttributes(bulletDamage);
+                    }
                 }
             }
         }

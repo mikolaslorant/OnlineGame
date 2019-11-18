@@ -45,7 +45,7 @@ namespace Network
                         writer.Write(player.Value.Rotation.y);
                         writer.Write(player.Value.Rotation.z);
                         writer.Write(player.Value.Rotation.w);
-
+                        writer.Write(player.Value.Health);
                     }
                     writer.Write(_tick);
                     writer.Write(_timeStamp);

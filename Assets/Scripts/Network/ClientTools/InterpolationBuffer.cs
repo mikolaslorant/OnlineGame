@@ -63,11 +63,11 @@ namespace Network.ClientTools
                     var interpolatedRotation = 
                         currentSnapshotPlayerStates[player.Key].Rotation * Quaternion.Euler((snapshotDeltaStateRotation.eulerAngles / snapshotDeltaTime) * deltaTime);
 
-                    worldState.Players[player.Key] = new PlayerState(interpolatedPosition, interpolatedRotation);
+                    worldState.Players[player.Key] = new PlayerState(interpolatedPosition, interpolatedRotation, player.Value.Health);
                 }
                 else
                 {
-                    worldState.Players[player.Key] = new PlayerState(player.Value.Position, player.Value.Rotation);
+                    worldState.Players[player.Key] = new PlayerState(player.Value.Position, player.Value.Rotation, player.Value.Health);
                 }
 
             }

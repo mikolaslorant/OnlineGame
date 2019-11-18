@@ -241,6 +241,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0.2
+  muzzleFlash: {fileID: 0}
   mainCharacterPrefab: {fileID: 343451022495772648, guid: ae18a3844d32f874a8e52dba9f7d5c57,
     type: 3}
   otherCharacterPrefab: {fileID: 9153303480131848527, guid: 4ea33aa4730783a4e9a36bd8d56d982c,
@@ -385,6 +386,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0.2
+  initialHealth: 100
+  bulletDamage: 1
   characterPrefab: {fileID: 5436759597355585438, guid: 304978d06c5315d4fb8da8b59b283699,
     type: 3}
   listenPort: 7000

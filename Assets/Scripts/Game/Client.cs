@@ -14,6 +14,7 @@ namespace Network
         private IDictionary<int, GameObject> _players; // other players
         private CharacterController _characterController; // client
         public float speed;
+        public GameObject muzzleFlash;
         public GameObject mainCharacterPrefab;
         public GameObject otherCharacterPrefab;
 
@@ -87,6 +88,8 @@ namespace Network
                 if (playerInput.Bitmap != 0 || playerInput.MouseXAxis != 0 || playerInput.MouseYAxis != 0)
                 {
                     _clientSidePredictor.UpdatePlayerState(playerInput);
+                    ApplyCosmeticEffects(playerInput);
+
                     PlayerInputMessage playerInputMessage = new PlayerInputMessage(_clientId, ServerId, playerInput);
                     _serverInfo.InputStream.AddToOutput(playerInputMessage);
                     _tick++;
@@ -144,6 +147,14 @@ namespace Network
                         _players[player.Key].transform.position = player.Value.Position;
                     }
                 }
+            }
+        }
+
+        private void ApplyCosmeticEffects(PlayerInput playerInput)
+        {
+            if(playerInput.GetKeyDown(KeyCode.Mouse0) && muzzleFlash != null)
+            {
+                Instantiate(muzzleFlash, _characterController.transform);
             }
         }
     }

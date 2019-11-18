@@ -28,7 +28,7 @@ namespace Network
             _tick = tick;
         }
 
-        public void UpdateClientRepresentation(Vector3 newControllerMovement, Vector3 newControllerRotation)
+        public void UpdateClientRepresentationMovement(Vector3 newControllerMovement, Vector3 newControllerRotation)
         {
             _characterController.Move(newControllerMovement);
             _characterController.transform.Rotate(newControllerRotation);
@@ -36,7 +36,13 @@ namespace Network
             _playerState.Rotation = _characterController.transform.rotation;
         }
 
+        public void UpdateClientRepresentationAttributes(int damageInflicted)
+        {
+            _playerState.Health -= damageInflicted;
+        }
+
         public PlayerState PlayerState => _playerState;
         public CharacterController CharacterController => _characterController;
+        public GameObject PlayerGameObject => _playerPrefab;
     }
 }
