@@ -3,7 +3,7 @@ using Game;
 using Helpers;
 using UnityEngine;
 
-
+/*
 namespace DefaultNamespace
 {
     public class Compressor
@@ -18,13 +18,11 @@ namespace DefaultNamespace
                     return this.WriteConnectionRequestMessage((ConnectionRequestMessage) message);
                 case MessageType.ConnectionResponse:
                     return this.WriteConnectionResponseMessage((ConnectionResponseMessage) message);
-                
             }
         }
 
         public void Decompress(byte[] packet)
         {
-
         }
 
         private byte[] WriteAckMessage(AckMessage m)
@@ -67,7 +65,6 @@ namespace DefaultNamespace
                     return new AckMessage(messageId, sender, receiver, ackType);
                 }
             }
-
         }
 
         private byte[] WriteConnectionRequestMessage(ConnectionRequestMessage m)
@@ -131,7 +128,6 @@ namespace DefaultNamespace
                 return m.ToArray();
             }
         }
-        
-        
     }
 }
+*/
