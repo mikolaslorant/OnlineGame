@@ -99,8 +99,11 @@ namespace Network
                 {
                     ConnectionRequestMessage connectionRequestMessage = (ConnectionRequestMessage) messages[0];
                     // instance new player;
-                    var newPlayer = Instantiate(characterPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                    var newPlayer = Instantiate(characterPrefab, new Vector3(0, 5, 0), Quaternion.identity);
                     var  characterController =  newPlayer.AddComponent<CharacterController>();
+                    characterController.height = 0;
+                    characterController.radius = 3;
+                    characterController.center = new Vector3(0, 1, -2);
                     // added to the client representation map
                     _clientStates[connection.ClientId] = new ClientRepresentation(newPlayer, characterController, 
                         new PlayerState(characterController.transform.position, characterController.transform.rotation, initialHealth), 0);

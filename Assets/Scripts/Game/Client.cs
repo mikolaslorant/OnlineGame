@@ -131,6 +131,9 @@ namespace Network
                         {
                             newPlayer = Instantiate(mainCharacterPrefab, player.Value.Position, Quaternion.identity);
                             _characterController =  newPlayer.AddComponent<CharacterController>();
+                            _characterController.height = 0;
+                            _characterController.radius = 3;
+                            _characterController.center = new Vector3(0, 1, -2);
                             _clientSidePredictor = new ClientSidePredictor(_characterController, speed);
                         }
                         else
