@@ -1,10 +1,13 @@
+using System;
+using System.Collections;
 using System.IO;
 using Game;
 using Helpers;
+using Network;
 using UnityEngine;
 
-/*
-namespace DefaultNamespace
+
+namespace Network
 {
     public class Compressor
     {
@@ -18,24 +21,56 @@ namespace DefaultNamespace
                     return this.WriteConnectionRequestMessage((ConnectionRequestMessage) message);
                 case MessageType.ConnectionResponse:
                     return this.WriteConnectionResponseMessage((ConnectionResponseMessage) message);
+                case MessageType.Snapshot:
+                    return this.WriteSnapshot((SnapshotMessage) message);
+                default:
+                    return null;
             }
         }
 
-        public void Decompress(byte[] packet)
+        public Message Decompress(byte[] packet)
         {
+            byte type = 0;
+            using (MemoryStream m = new MemoryStream(packet))
+            {
+                using (BinaryReader reader = new BinaryReader(m))
+                {
+                    int id = reader.ReadInt32();
+                    byte word = reader.ReadByte();
+                    type = reader.ReadByte();
+                }
+            }
+            type >>= 3;
+
+            MessageType messageType = (MessageType) type;
+            
+            switch (messageType)
+            {
+                case MessageType.ACK:
+                    return ReadAckMessage(packet);
+                case MessageType.ConnectionRequest:
+                    return ReadConnectionRequestMessage(packet);
+                case MessageType.ConnectionResponse:
+                    return ReadConnectionResponseMessage(packet);
+                case MessageType.Snapshot:
+                    return ReadSnapshotMessage(packet);
+                default:
+                    return null;
+            }
+            return null;
         }
 
-        private byte[] WriteAckMessage(AckMessage m)
+        private byte[] WriteAckMessage(AckMessage message)
         {
             int word1 = 0;
-            word = m.Id();
-            byte word3 = m.Sender();
+            word1 = message.Id;
+            byte word2 = (byte)message.SenderId;
+            byte word3 = 0;
             word2 <<= 3;
-            word2 += (byte) m.Receiver();
-            word2 <<= 3;
-            word2 += (byte) m.Type();
-            word2 <<= 3;
-            word2 += (byte) m.AckType();
+            word2 |= (byte) message.ReceiverId;
+            word3 |= (byte) message.Type();
+            word3 <<= 3;
+            word3 |= (byte) message.AckType;
             using (MemoryStream m = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(m))
@@ -61,22 +96,22 @@ namespace DefaultNamespace
                     int receiver = (int) byte2 % 8;
                     byte2 >>= 3;
                     int sender = (int) byte2 % 8;
-                    MessageType ackType = (MessageType) byte3 % 8;
+                    MessageType ackType = (MessageType) ((int)byte3 % 8);
                     return new AckMessage(messageId, sender, receiver, ackType);
                 }
             }
         }
 
-        private byte[] WriteConnectionRequestMessage(ConnectionRequestMessage m)
+        private byte[] WriteConnectionRequestMessage(ConnectionRequestMessage message)
         {
             int word1 = 0;
-            word = m.Id();
-            byte word3 = m.Sender();
+            word1 = message.Id;
+            byte word2 = 0; 
+            word2 |= (byte)message.SenderId;
             word2 <<= 3;
-            word2 += (byte) m.Receiver();
-            word2 <<= 3;
-            word2 += (byte) m.Type();
-            word2 <<= 3;
+            word2 |= (byte) message.ReceiverId;
+            byte word3 = (byte) message.Type();
+            word3 <<= 3;
             using (MemoryStream m = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(m))
@@ -106,16 +141,17 @@ namespace DefaultNamespace
             }
         }
 
-        private byte[] WriteConnectionResponseMessage(ConnectionResponseMessage m)
+        private byte[] WriteConnectionResponseMessage(ConnectionResponseMessage message)
         {
             int word1 = 0;
-            word = m.Id();
-            byte word3 = m.Sender();
+            word1 = message.Id;
+            byte word2 = 0;
+            byte word3 = 0;
+            word2 |= (byte)message.SenderId;
             word2 <<= 3;
-            word2 += (byte) m.Receiver();
-            word2 <<= 3;
-            word2 += (byte) m.Type();
-            word2 <<= 3;
+            word2 += (byte) message.ReceiverId;
+            word3 |= (byte) message.Type();
+            word3 <<= 3;
             using (MemoryStream m = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(m))
@@ -128,6 +164,129 @@ namespace DefaultNamespace
                 return m.ToArray();
             }
         }
+        
+        private ConnectionResponseMessage ReadConnectionResponseMessage(byte[] bytes)
+        {
+            using (MemoryStream m = new MemoryStream(bytes))
+            {
+                using (BinaryReader reader = new BinaryReader(m))
+                {
+                    int messageId = reader.ReadInt32();
+                    char byte2 = reader.ReadChar();
+                    int receiver = (int) byte2 % 8;
+                    byte2 >>= 3;
+                    int sender = (int) byte2 % 8;
+                    return new ConnectionResponseMessage(messageId, sender, receiver);
+                }
+            }
+        }
+
+        private byte[] WriteSnapshot(SnapshotMessage message)
+        {
+            int word1 = message.Id;
+            byte word2 = (byte)message.SenderId;
+            word2 <<= 3;
+            word2 |= (byte) message.ReceiverId;
+            byte word3 = (byte) message.Type();
+            word3 <<= 3;
+            word3 |= (byte) message.WorldState.Players.Count;
+
+            using (MemoryStream m = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(m))
+                {
+                    writer.Write(word1);
+                    writer.Write(word2);
+                    writer.Write(word3);
+
+                    foreach (var ps in message.WorldState.Players)
+                    {
+                        long word4 = 0;
+                        word4 |= (byte) ps.Key;
+                        word4 <<= 12;
+                        int xDim = (int)Math.Floor(ps.Value.Position.x / 0.1) + 200;
+                        word4 |= xDim;
+                        int yDim = (int)Math.Floor(ps.Value.Position.y / 0.1) + 200;
+                        word4 <<= 12;
+                        word4 |= yDim;
+                        int zDim = (int)Math.Floor(ps.Value.Position.z / 0.1) + (int)Math.Floor(200/0.1);
+                        word4 |= zDim;
+                        word4 <<= 6;
+                        word4 |= ((int) Math.Floor(ps.Value.Rotation.x / 0.05) + (int) Math.Floor(1 / 0.05));
+                        word4 <<= 6;
+                        word4 |= ((int) Math.Floor(ps.Value.Rotation.y / 0.05) + (int) Math.Floor(1 / 0.05));
+                        word4 <<= 6;
+                        word4 |= ((int) Math.Floor(ps.Value.Rotation.z / 0.05) + (int) Math.Floor(1 / 0.05));
+                        word4 <<= 1;
+                        word4 |= (ps.Value.Rotation.w > 0) ? 1 : 0;
+                        word4 <<= 4;
+                        word4 |= (ps.Value.Health / 10);
+                        writer.Write(word4);
+                    }
+                    writer.Write(message.Tick);
+                    writer.Write(message.TimeStamp);
+                }
+
+                return m.ToArray();
+            }
+        }
+
+        private SnapshotMessage ReadSnapshotMessage(byte[] message)
+        {
+            using (MemoryStream m = new MemoryStream(message))
+            {
+                using (BinaryReader reader = new BinaryReader(m))
+                {
+                    int messageId = reader.ReadInt32();
+                    byte word1 = reader.ReadByte();
+                    int receiver = word1 & 7;
+                    word1 >>= 3;
+                    int sender = word1 & 7;
+                    word1 = reader.ReadByte();
+                    int countPlayers = word1 & 7;
+                    WorldState worldState = new WorldState();
+                    for (int i = 0; i < countPlayers; i++)
+                    {
+                        long val = reader.ReadInt64();
+                        int hp = (int)((val & 15) * 10);
+                        val >>= 4;
+                        byte isPositive = (byte)((val & 1) - 1);
+                        val >>= 1;
+                        float zRotation = ((val & 63) * 0.05f) - 1.0f;
+                        val >>= 6;
+                        float yRotation = ((val & 63) * 0.05f) - 1.0f;
+                        val >>= 6;
+                        float xRotation = ((val & 63) * 0.05f) - 1.0f;
+                        val >>= 6;
+                        float wRotation = (float) Math.Sqrt(1.0f - (float) Math.Pow(zRotation, 2) -
+                                                            (float) Math.Pow(yRotation, 2) -
+                                                            (float) Math.Pow(xRotation, 2));
+                        wRotation *= isPositive;
+                        Quaternion quaternion = new Quaternion(xRotation, yRotation, zRotation, wRotation);
+                        float zPosition = ((val & 4095) * 0.1f - 100.0f);
+                        val >>= 12;
+                        float yPosition = ((val & 4095) * 0.1f - 100.0f);
+                        val >>= 12;
+                        float xPosition = ((val & 4095) * 0.1f - 100.0f);
+                        Vector3 position = new Vector3(xPosition, yPosition, zPosition);
+                        val >>= 12;
+                        int key = (int)(val & 7);
+                        PlayerState playerState = new PlayerState(position, quaternion, hp);
+                        worldState.Players.Add(key, playerState);
+                    }
+
+                    int tick = reader.ReadInt32();
+                    float timestamp = reader.ReadInt32();
+                    
+                    return new SnapshotMessage(messageId, sender, receiver, worldState, tick, timestamp);
+                }
+            }
+        }
+
+        private byte[] WriteInputMessage(PlayerInputMessage message)
+        {
+            
+        }
+        
     }
 }
-*/
