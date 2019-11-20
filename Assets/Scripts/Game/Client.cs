@@ -169,6 +169,7 @@ namespace Network
                         
                         // setting interpolated position
                         _players[player.Key].transform.position = player.Value.Position;
+                        _players[player.Key].transform.rotation = player.Value.Rotation;
                     }
                 }
             }
