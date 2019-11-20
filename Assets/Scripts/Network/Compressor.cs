@@ -283,10 +283,11 @@ namespace Network
             }
         }
 
+        /*
         private byte[] WriteInputMessage(PlayerInputMessage message)
         {
             
         }
-        
+        */
     }
 }

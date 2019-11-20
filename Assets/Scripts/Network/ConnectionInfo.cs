@@ -22,6 +22,8 @@ namespace Network
                 new ReliableFastStream(MessageType.Input),
                 new ReliableSlowStream(MessageType.ConnectionRequest),
                 new ReliableSlowStream(MessageType.ConnectionResponse),
+                new ReliableFastStream(MessageType.DisconnectionRequest),
+                new ReliableFastStream(MessageType.DisconnectionResponse)
             };
         }
 
@@ -34,5 +36,7 @@ namespace Network
         public Stream InputStream => _streams[1];
         public Stream ConnectionRequestStream => _streams[2];
         public Stream ConnectionResponseStream => _streams[3];
+        public Stream DisconnectionRequestStream => _streams[4];
+        public Stream DisconnectionResponseStream => _streams[5];
     }
 }
