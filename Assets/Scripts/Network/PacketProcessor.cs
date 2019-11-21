@@ -10,12 +10,14 @@ namespace Network
         private int _idCounter;
         private readonly Connection _connection;
         private readonly IDictionary<IPAddress, ConnectionInfo> _connectionsTable;
+        private Compressor _compressor;
 
         public PacketProcessor(Connection connection, IDictionary<IPAddress, ConnectionInfo> connectionsTable)
         {
             _connection = connection;
             _connectionsTable = connectionsTable;
             _idCounter = 0;
+            _compressor = new Compressor();
         }
 
         public void ProcessInput()
@@ -25,7 +27,7 @@ namespace Network
             while ((connectionPacket = _connection.GetData()) != null)
             {
                 InitializeConnectionInfoIfNewConnection(connectionPacket);
-                Message message = MessageDeserializer.Deserialize(connectionPacket.Data);
+                Message message = _compressor.Decompress(connectionPacket.Data);
                 Stream stream;
                 if (message.Type() == MessageType.ACK)
                     stream = _connectionsTable[connectionPacket.Ip].Streams
@@ -46,7 +48,7 @@ namespace Network
                     List<Message> messagesToSend = stream.GetMessagesToSend();
                     foreach (var message in messagesToSend)
                     {
-                        _connection.SendData(message.Serialize(), connection.Hostname, connection.Port);
+                        _connection.SendData(this._compressor.Compress(message), connection.Hostname, connection.Port);
                     }
                 }
             }
