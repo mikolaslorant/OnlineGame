@@ -224,9 +224,9 @@ namespace Network
                         word4 <<= 6;
                         word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.05);
                         word4 <<= 6;
-                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.05);
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.y + 1) / 0.05);
                         word4 <<= 6;
-                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.05);
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.z + 1) / 0.05);
                         word4 <<= 1;
                         word4 |= (ps.Value.Rotation.w > 0) ? 1 : 0;
                         word4 <<= 4;
