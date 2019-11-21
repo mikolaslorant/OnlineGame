@@ -222,18 +222,18 @@ namespace Network
                         word4 <<= 12;
                         word4 |= zDim;
                         word4 <<= 7;
-                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.025);
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.025f);
                         word4 <<= 7;
-                        word4 |= (int) Math.Floor((ps.Value.Rotation.y + 1) / 0.025);
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.y + 1) / 0.025f);
                         word4 <<= 7;
-                        word4 |= (int) Math.Floor((ps.Value.Rotation.z + 1) / 0.025);
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.z + 1) / 0.025f);
                         word4 <<= 1;
                         word4 |= (ps.Value.Rotation.w > 0) ? 1 : 0;
-                        word4 <<= 4;
-                        word4 |= (ps.Value.Health / 10);
+                        Debug.Log(ps.Key);
+                        byte word5 = (byte)(ps.Value.Health / 10);
                         writer.Write(word4);
+                        writer.Write(word5);
                     }
-                    Debug.Log(message.Tick);
                     writer.Write(message.Tick);
                     writer.Write(message.TimeStamp);
                 }
@@ -259,8 +259,8 @@ namespace Network
                     for (int i = 0; i < countPlayers; i++)
                     {
                         long val = reader.ReadInt64();
-                        int hp = (int) ((val & 15) * 10);
-                        val >>= 4;
+                        byte word = reader.ReadByte();
+                        int hp = (int) (word * 10);
                         byte isPositive = (byte) (val & 1);
                         val >>= 1;
                         float zRotation = ((val & 127) * 0.025f) - 1.0f;
@@ -282,6 +282,7 @@ namespace Network
                         Vector3 position = new Vector3(xPosition, yPosition, zPosition);
                         val >>= 12;
                         int key = (int) (val & 7);
+                        Debug.Log(key);
                         PlayerState playerState = new PlayerState(position, quaternion, hp);
                         worldState.Players.Add(key, playerState);
                     }
