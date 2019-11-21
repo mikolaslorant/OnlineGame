@@ -42,5 +42,6 @@ namespace Network
         }
 
         public PlayerInput PlayerInput => _playerInput;
+        
     }
 }

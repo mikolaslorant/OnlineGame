@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using Game;
 using Helpers;
@@ -20,6 +21,7 @@ namespace Network
 
         // Network
         private bool _connected;
+        private bool _waitingDisconnection;
         private int _clientId;
         private const int ServerId = 0;
         public string hostname;
@@ -51,48 +53,68 @@ namespace Network
             _tick = 0;
             _clientId = -1;
             _connected = false;
+            _waitingDisconnection = false;
             _serverInfo.ConnectionRequestStream.AddToOutput(new ConnectionRequestMessage(0, ServerId));
         }
 
         void Update()
         {
             _packetProcessor.ProcessInput();
-            if (!_connected)
+            if (!_waitingDisconnection)
             {
-                List<Message> messages = _serverInfo.ConnectionResponseStream.GetMessagesReceived();
-                if (messages.Count > 0)
+                if (!_connected)
                 {
-                    ConnectionResponseMessage connectionResponseMessage = (ConnectionResponseMessage) messages[0];
-                    this._clientId = connectionResponseMessage.ReceiverId;
-                    _connected = true;
+                    List<Message> messages = _serverInfo.ConnectionResponseStream.GetMessagesReceived();
+                    if (messages.Count > 0)
+                    {
+                        ConnectionResponseMessage connectionResponseMessage = (ConnectionResponseMessage) messages[0];
+                        this._clientId = connectionResponseMessage.ReceiverId;
+                        _connected = true;
+                    }
                 }
-            }
-            else
-            {
-                UpdateWorldStateWithSnapshot();
+                else
+                {
+                    UpdateWorldStateWithSnapshot();
+                }
             }
             _packetProcessor.ProcessOutput();
             if (_interpolationBuffer.SynchronizeState == ClientSynchronizeState.Synchronized)
             {
                 _currentTime += Time.deltaTime;
             }
-            
+            if(_waitingDisconnection)
+            {
+                List<Message> messages = _serverInfo.DisconnectionResponseStream.GetMessagesReceived();
+                if (messages.Count > 0)
+                {
+                    DestroyEverything();
+                }
+            }
         }
 
         void FixedUpdate()
         {
-            if (_clientSidePredictor != null)
+            if (!_waitingDisconnection &&_clientSidePredictor != null)
             {
                 // Output
                 PlayerInput playerInput = PlayerInput.GetPlayerInput(_tick);
                 if (playerInput.Bitmap != 0 || playerInput.MouseXAxis != 0 || playerInput.MouseYAxis != 0)
                 {
-                    _clientSidePredictor.UpdatePlayerState(playerInput);
-                    ApplyCosmeticEffects(playerInput);
-
-                    PlayerInputMessage playerInputMessage = new PlayerInputMessage(_clientId, ServerId, playerInput);
-                    _serverInfo.InputStream.AddToOutput(playerInputMessage);
-                    _tick++;
+                    if (playerInput.GetKeyDown(KeyCode.Escape))
+                    {
+                        _serverInfo.DisconnectionRequestStream.AddToOutput(new DisconnectionRequestMessage(_clientId, ServerId));
+                        _waitingDisconnection = true;
+                    }
+                    else
+                    {
+                        _clientSidePredictor.UpdatePlayerState(playerInput);
+                        ApplyCosmeticEffects(playerInput);
+                        PlayerInputMessage playerInputMessage = new PlayerInputMessage(_clientId, ServerId, playerInput);
+                        _serverInfo.InputStream.AddToOutput(playerInputMessage);
+                        _tick++;
+                    }
+                   
+                    
                 }
 
                 var clientStateFromSnapshot = _interpolationBuffer.PollClient(_clientId, _currentTime);
@@ -135,7 +157,7 @@ namespace Network
                             _characterController.radius = 3;
                             _characterController.center = new Vector3(0, 1, -2);
                             _clientSidePredictor = new ClientSidePredictor(_characterController, speed);
-                        }
+                        } 
                         else
                         {
                             newPlayer = Instantiate(otherCharacterPrefab, player.Value.Position, Quaternion.identity);
@@ -148,6 +170,7 @@ namespace Network
                         
                         // setting interpolated position
                         _players[player.Key].transform.position = player.Value.Position;
+                        _players[player.Key].transform.rotation = player.Value.Rotation;
                     }
                 }
             }
@@ -159,6 +182,16 @@ namespace Network
             {
                 Instantiate(muzzleFlash, _characterController.transform);
             }
+        }
+
+        private void DestroyEverything()
+        {
+            Destroy(_characterController);
+            foreach (var gameObject in _players)
+            {
+                Destroy(gameObject.Value);
+            }
+            Application.Quit();
         }
     }
 }

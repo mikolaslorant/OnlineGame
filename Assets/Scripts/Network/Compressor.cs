@@ -4,6 +4,7 @@ using System.IO;
 using Game;
 using Helpers;
 using Network;
+using Unity.UNetWeaver;
 using UnityEngine;
 
 
@@ -23,6 +24,8 @@ namespace Network
                     return this.WriteConnectionResponseMessage((ConnectionResponseMessage) message);
                 case MessageType.Snapshot:
                     return this.WriteSnapshot((SnapshotMessage) message);
+                case MessageType.Input:
+                    return this.WriteInputMessage((PlayerInputMessage) message);
                 default:
                     return null;
             }
@@ -40,10 +43,11 @@ namespace Network
                     type = reader.ReadByte();
                 }
             }
+
             type >>= 3;
 
             MessageType messageType = (MessageType) type;
-            
+
             switch (messageType)
             {
                 case MessageType.ACK:
@@ -54,9 +58,12 @@ namespace Network
                     return ReadConnectionResponseMessage(packet);
                 case MessageType.Snapshot:
                     return ReadSnapshotMessage(packet);
+                case MessageType.Input:
+                    return ReadInputMessage(packet);
                 default:
                     return null;
             }
+
             return null;
         }
 
@@ -64,7 +71,7 @@ namespace Network
         {
             int word1 = 0;
             word1 = message.Id;
-            byte word2 = (byte)message.SenderId;
+            byte word2 = (byte) message.SenderId;
             byte word3 = 0;
             word2 <<= 3;
             word2 |= (byte) message.ReceiverId;
@@ -93,10 +100,10 @@ namespace Network
                     int messageId = reader.ReadInt32();
                     char byte2 = reader.ReadChar();
                     char byte3 = reader.ReadChar();
-                    int receiver = (int) byte2 % 8;
+                    int receiver = (int) byte2 % 7;
                     byte2 >>= 3;
-                    int sender = (int) byte2 % 8;
-                    MessageType ackType = (MessageType) ((int)byte3 % 8);
+                    int sender = (int) byte2 % 7;
+                    MessageType ackType = (MessageType) ((int) byte3 % 7);
                     return new AckMessage(messageId, sender, receiver, ackType);
                 }
             }
@@ -106,8 +113,8 @@ namespace Network
         {
             int word1 = 0;
             word1 = message.Id;
-            byte word2 = 0; 
-            word2 |= (byte)message.SenderId;
+            byte word2 = 0;
+            word2 |= (byte) message.SenderId;
             word2 <<= 3;
             word2 |= (byte) message.ReceiverId;
             byte word3 = (byte) message.Type();
@@ -133,9 +140,9 @@ namespace Network
                 {
                     int messageId = reader.ReadInt32();
                     char byte2 = reader.ReadChar();
-                    int receiver = (int) byte2 % 8;
+                    int receiver = (int) byte2 % 7;
                     byte2 >>= 3;
-                    int sender = (int) byte2 % 8;
+                    int sender = (int) byte2 % 7;
                     return new ConnectionRequestMessage(messageId, sender, receiver);
                 }
             }
@@ -147,7 +154,7 @@ namespace Network
             word1 = message.Id;
             byte word2 = 0;
             byte word3 = 0;
-            word2 |= (byte)message.SenderId;
+            word2 |= (byte) message.SenderId;
             word2 <<= 3;
             word2 += (byte) message.ReceiverId;
             word3 |= (byte) message.Type();
@@ -164,7 +171,7 @@ namespace Network
                 return m.ToArray();
             }
         }
-        
+
         private ConnectionResponseMessage ReadConnectionResponseMessage(byte[] bytes)
         {
             using (MemoryStream m = new MemoryStream(bytes))
@@ -173,9 +180,9 @@ namespace Network
                 {
                     int messageId = reader.ReadInt32();
                     char byte2 = reader.ReadChar();
-                    int receiver = (int) byte2 % 8;
+                    int receiver = (int) byte2 % 7;
                     byte2 >>= 3;
-                    int sender = (int) byte2 % 8;
+                    int sender = (int) byte2 % 7;
                     return new ConnectionResponseMessage(messageId, sender, receiver);
                 }
             }
@@ -184,7 +191,7 @@ namespace Network
         private byte[] WriteSnapshot(SnapshotMessage message)
         {
             int word1 = message.Id;
-            byte word2 = (byte)message.SenderId;
+            byte word2 = (byte) message.SenderId;
             word2 <<= 3;
             word2 |= (byte) message.ReceiverId;
             byte word3 = (byte) message.Type();
@@ -204,24 +211,25 @@ namespace Network
                         long word4 = 0;
                         word4 |= (byte) ps.Key;
                         word4 <<= 12;
-                        int xDim = (int)Math.Floor(ps.Value.Position.x / 0.1) + 200;
+                        int xDim = (int) Math.Floor((ps.Value.Position.x  + 100)/0.1);
                         word4 |= xDim;
-                        int yDim = (int)Math.Floor(ps.Value.Position.y / 0.1) + 200;
+                        int yDim = (int) Math.Floor((ps.Value.Position.y  + 100)/0.1);
                         word4 <<= 12;
                         word4 |= yDim;
-                        int zDim = (int)Math.Floor(ps.Value.Position.z / 0.1) + (int)Math.Floor(200/0.1);
+                        int zDim = (int)Math.Floor((ps.Value.Position.z  + 100)/0.1);
+                        word4 <<= 12;
                         word4 |= zDim;
-                        word4 <<= 6;
-                        word4 |= ((int) Math.Floor(ps.Value.Rotation.x / 0.05) + (int) Math.Floor(1 / 0.05));
-                        word4 <<= 6;
-                        word4 |= ((int) Math.Floor(ps.Value.Rotation.y / 0.05) + (int) Math.Floor(1 / 0.05));
-                        word4 <<= 6;
-                        word4 |= ((int) Math.Floor(ps.Value.Rotation.z / 0.05) + (int) Math.Floor(1 / 0.05));
+                        word4 <<= 7;
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.025f);
+                        word4 <<= 7;
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.y + 1) / 0.025f);
+                        word4 <<= 7;
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.z + 1) / 0.025f);
                         word4 <<= 1;
                         word4 |= (ps.Value.Rotation.w > 0) ? 1 : 0;
-                        word4 <<= 4;
-                        word4 |= (ps.Value.Health / 10);
+                        byte word5 = (byte)(ps.Value.Health / 10);
                         writer.Write(word4);
+                        writer.Write(word5);
                     }
                     writer.Write(message.Tick);
                     writer.Write(message.TimeStamp);
@@ -248,20 +256,20 @@ namespace Network
                     for (int i = 0; i < countPlayers; i++)
                     {
                         long val = reader.ReadInt64();
-                        int hp = (int)((val & 15) * 10);
-                        val >>= 4;
-                        byte isPositive = (byte)((val & 1) - 1);
+                        byte word = reader.ReadByte();
+                        int hp = (int) (word * 10);
+                        byte isPositive = (byte) (val & 1);
                         val >>= 1;
-                        float zRotation = ((val & 63) * 0.05f) - 1.0f;
-                        val >>= 6;
-                        float yRotation = ((val & 63) * 0.05f) - 1.0f;
-                        val >>= 6;
-                        float xRotation = ((val & 63) * 0.05f) - 1.0f;
-                        val >>= 6;
+                        float zRotation = ((val & 127) * 0.025f) - 1.0f;
+                        val >>= 7;
+                        float yRotation = ((val & 127) * 0.025f) - 1.0f;
+                        val >>= 7;
+                        float xRotation = ((val & 127) * 0.025f) - 1.0f;
+                        val >>= 7;
                         float wRotation = (float) Math.Sqrt(1.0f - (float) Math.Pow(zRotation, 2) -
                                                             (float) Math.Pow(yRotation, 2) -
                                                             (float) Math.Pow(xRotation, 2));
-                        wRotation *= isPositive;
+                        wRotation *= (isPositive > 0) ? 1 : -1;
                         Quaternion quaternion = new Quaternion(xRotation, yRotation, zRotation, wRotation);
                         float zPosition = ((val & 4095) * 0.1f - 100.0f);
                         val >>= 12;
@@ -270,22 +278,65 @@ namespace Network
                         float xPosition = ((val & 4095) * 0.1f - 100.0f);
                         Vector3 position = new Vector3(xPosition, yPosition, zPosition);
                         val >>= 12;
-                        int key = (int)(val & 7);
+                        int key = (int) (val & 7);
                         PlayerState playerState = new PlayerState(position, quaternion, hp);
                         worldState.Players.Add(key, playerState);
                     }
 
                     int tick = reader.ReadInt32();
-                    float timestamp = reader.ReadInt32();
+                    float timestamp = reader.ReadSingle();
+                    
                     
                     return new SnapshotMessage(messageId, sender, receiver, worldState, tick, timestamp);
                 }
             }
         }
-
+        
         private byte[] WriteInputMessage(PlayerInputMessage message)
         {
-            
+            int word1 = message.Id;
+            byte word2 = 0;
+            word2 |= (byte)message.SenderId;
+            word2 <<= 3;
+            word2 |= (byte) message.ReceiverId;
+            byte word3 = (byte) message.Type();
+            word3 <<= 3;
+            using (MemoryStream m = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(m))
+                {
+                    writer.Write(word1);
+                    writer.Write(word2);
+                    writer.Write(word3);
+                    writer.Write(message.PlayerInput.MouseXAxis);
+                    writer.Write(message.PlayerInput.MouseYAxis);
+                    writer.Write(message.PlayerInput.Bitmap);
+                    writer.Write(message.PlayerInput.Tick);
+                }
+
+                return m.ToArray();
+            }
+        }
+        
+        private PlayerInputMessage ReadInputMessage(byte[] packet)
+        {
+            using (MemoryStream m = new MemoryStream(packet))
+            {
+                using (BinaryReader reader = new BinaryReader(m))
+                {
+                    int id = reader.ReadInt32();
+                    byte word1 = reader.ReadByte();
+                    int receiver = word1 & 7;
+                    word1 >>= 3;
+                    int sender = word1 & 7;
+                    byte word2 = reader.ReadByte();
+                    float xMouse = reader.ReadSingle();
+                    float yMouse = reader.ReadSingle();
+                    byte bitmap = reader.ReadByte();
+                    int tick = reader.ReadInt32();
+                    return new PlayerInputMessage(id, sender, receiver, new PlayerInput(bitmap, xMouse, yMouse, tick));
+                }
+            }
         }
         
     }

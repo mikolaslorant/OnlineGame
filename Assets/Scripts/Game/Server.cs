@@ -40,6 +40,7 @@ namespace Network
         {
             _packetProcessor.ProcessInput();
             CheckIncomingConnectionRequests();
+            CheckIncomingDisconnections();
             BroadCastSnapshot();
             _packetProcessor.ProcessOutput();
             _currentTime += Time.deltaTime;
@@ -109,6 +110,21 @@ namespace Network
                         new PlayerState(characterController.transform.position, characterController.transform.rotation, initialHealth), 0);
                     // return connection response message to new player
                     connection.ConnectionResponseStream.AddToOutput(new ConnectionResponseMessage(ServerId, connection.ClientId));
+                }
+            }
+        }
+
+        private void CheckIncomingDisconnections()
+        {
+            foreach (var connection in _connectionsTable.Values)
+            {
+                List<Message> messages = connection.DisconnectionRequestStream.GetMessagesReceived();
+                if (messages.Count > 0)
+                {
+                    DisconnectionRequestMessage connectionRequestMessage = (DisconnectionRequestMessage) messages[0];
+                    Destroy(_clientStates[connection.ClientId].CharacterController);
+                    Destroy(_clientStates[connection.ClientId].PlayerGameObject);
+                    connection.DisconnectionResponseStream.AddToOutput(new DisconnectionResponseMessage(ServerId,connection.ClientId));
                 }
             }
         }

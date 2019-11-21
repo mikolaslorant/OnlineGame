@@ -48,6 +48,12 @@ namespace Network
                         case MessageType.ConnectionResponse:
                             message = new ConnectionResponseMessage(id, senderId, receiverId);
                             break;
+                        case MessageType.DisconnectionRequest:
+                            message = new DisconnectionRequestMessage(id, senderId, receiverId);
+                            break;
+                        case MessageType.DisconnectionResponse:
+                            message = new DisconnectionResponseMessage(id, senderId, receiverId);
+                            break;
                     }
                 }
             }

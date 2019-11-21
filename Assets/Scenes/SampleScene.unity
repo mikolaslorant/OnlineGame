@@ -337,9 +337,9 @@ MonoBehaviour:
   muzzleFlash: {fileID: 0}
   mainCharacterPrefab: {fileID: 1520443955858708, guid: 629bbfc4ad666d742870312b13c5d268,
     type: 3}
-  otherCharacterPrefab: {fileID: 1520443955858708, guid: 629bbfc4ad666d742870312b13c5d268,
+  otherCharacterPrefab: {fileID: 1520443955858708, guid: 2282556761d4e454c8e6a9c8fc9d95cd,
     type: 3}
-  hostname: 127.0.0.1
+  hostname: 10.2.71.228
   port: 7000
   listenPort: 7001
 --- !u!4 &538660194
@@ -851,7 +851,7 @@ MonoBehaviour:
   speed: 0.5
   initialHealth: 0
   bulletDamage: 0
-  characterPrefab: {fileID: 5436759597355585438, guid: 304978d06c5315d4fb8da8b59b283699,
+  characterPrefab: {fileID: 1520443955858708, guid: 21422d05a30863b4a90dcef804a5cb03,
     type: 3}
   listenPort: 7000
 --- !u!4 &1645743609

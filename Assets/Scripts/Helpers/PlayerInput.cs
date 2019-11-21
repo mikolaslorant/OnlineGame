@@ -36,6 +36,8 @@ namespace Helpers
                     break;
                 case KeyCode.Mouse0: _bitmap |= 1 << 6;
                     break;
+                case KeyCode.Escape: _bitmap |= 1 << 7;
+                    break;
             }
         }
 
@@ -57,6 +59,8 @@ namespace Helpers
                     return (_bitmap & (1 << 5)) > 0;
                 case KeyCode.Mouse0:
                     return (_bitmap & (1 << 6)) > 0;
+                case KeyCode.Escape:
+                    return (_bitmap & (1 << 7)) > 0;
                 default: 
                     return false;
             }
@@ -80,7 +84,8 @@ namespace Helpers
                 playerInput.AddKey(KeyCode.LeftShift);
             if (Input.GetKey(KeyCode.Mouse0))
                 playerInput.AddKey(KeyCode.Mouse0);
-
+            if (Input.GetKey(KeyCode.Escape))
+                playerInput.AddKey(KeyCode.Escape);
             playerInput._mouseXAxis = Input.GetAxis("Mouse X");
             playerInput._mouseYAxis = Input.GetAxis("Mouse Y");
 
@@ -100,9 +105,9 @@ namespace Helpers
             if (playerInput.GetKeyDown(KeyCode.A))
                 totalMovement -= characterController.transform.right;
             if (playerInput.GetKeyDown(KeyCode.Space))
-                totalMovement += new Vector3(0, 1, 0);
+                totalMovement += characterController.transform.up;
             if (playerInput.GetKeyDown(KeyCode.LeftShift))
-                totalMovement += new Vector3(0, -1, 0);
+                totalMovement -= characterController.transform.up;
 
             return totalMovement;
         }
