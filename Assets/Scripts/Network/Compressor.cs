@@ -287,7 +287,7 @@ namespace Network
                     }
 
                     int tick = reader.ReadInt32();
-                    float timestamp = reader.ReadInt32();
+                    float timestamp = reader.ReadSingle();
                     
                     
                     return new SnapshotMessage(messageId, sender, receiver, worldState, tick, timestamp);
@@ -333,8 +333,8 @@ namespace Network
                     word1 >>= 3;
                     int sender = word1 & 7;
                     byte word2 = reader.ReadByte();
-                    float yMouse = reader.ReadInt32();
-                    float xMouse = reader.ReadInt32();
+                    float yMouse = reader.ReadSingle();
+                    float xMouse = reader.ReadSingle();
                     byte bitmap = reader.ReadByte();
                     int tick = reader.ReadInt32();
                     return new PlayerInputMessage(id, sender, receiver, new PlayerInput(bitmap, xMouse, yMouse, tick));
