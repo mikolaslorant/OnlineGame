@@ -339,7 +339,7 @@ MonoBehaviour:
     type: 3}
   otherCharacterPrefab: {fileID: 1520443955858708, guid: 2282556761d4e454c8e6a9c8fc9d95cd,
     type: 3}
-  hostname: 192.168.0.22
+  hostname: 10.2.71.228
   port: 7000
   listenPort: 7001
 --- !u!4 &538660194
