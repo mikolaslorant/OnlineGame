@@ -105,9 +105,9 @@ namespace Helpers
             if (playerInput.GetKeyDown(KeyCode.A))
                 totalMovement -= characterController.transform.right;
             if (playerInput.GetKeyDown(KeyCode.Space))
-                totalMovement += new Vector3(0, 1, 0);
+                totalMovement += characterController.transform.up;
             if (playerInput.GetKeyDown(KeyCode.LeftShift))
-                totalMovement += new Vector3(0, -1, 0);
+                totalMovement -= characterController.transform.up;
 
             return totalMovement;
         }
