@@ -149,7 +149,6 @@ namespace Network
                     {
                         // instance new player;
                         GameObject newPlayer;
-                        Debug.Log(player.Key.ToString() + "  " + _clientId.ToString());
                         if (player.Key == _clientId)
                         {
                             newPlayer = Instantiate(mainCharacterPrefab, player.Value.Position, Quaternion.identity);

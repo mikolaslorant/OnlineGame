@@ -14,7 +14,6 @@ namespace Network
     {
         public byte[] Compress(Message message)
         {
-            //Debug.Log("Sender: " + message.SenderId + "Receiver: " + message.ReceiverId);
             switch (message.Type())
             {
                 case MessageType.ACK:
@@ -42,7 +41,6 @@ namespace Network
                     int id = reader.ReadInt32();
                     byte word = reader.ReadByte();
                     type = reader.ReadByte();
-                    //Debug.Log("Receiver: " + (word & 7) + "Sender " + ((word >> 3) & 7));
                 }
             }
 
@@ -229,7 +227,6 @@ namespace Network
                         word4 |= (int) Math.Floor((ps.Value.Rotation.z + 1) / 0.025f);
                         word4 <<= 1;
                         word4 |= (ps.Value.Rotation.w > 0) ? 1 : 0;
-                        Debug.Log(ps.Key);
                         byte word5 = (byte)(ps.Value.Health / 10);
                         writer.Write(word4);
                         writer.Write(word5);
@@ -282,7 +279,6 @@ namespace Network
                         Vector3 position = new Vector3(xPosition, yPosition, zPosition);
                         val >>= 12;
                         int key = (int) (val & 7);
-                        Debug.Log(key);
                         PlayerState playerState = new PlayerState(position, quaternion, hp);
                         worldState.Players.Add(key, playerState);
                     }
