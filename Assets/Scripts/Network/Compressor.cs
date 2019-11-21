@@ -263,11 +263,11 @@ namespace Network
                         val >>= 4;
                         byte isPositive = (byte) (val & 1);
                         val >>= 1;
-                        float zRotation = ((val & 63) * 0.025f) - 1.0f;
+                        float zRotation = ((val & 127) * 0.025f) - 1.0f;
                         val >>= 7;
-                        float yRotation = ((val & 63) * 0.025f) - 1.0f;
+                        float yRotation = ((val & 127) * 0.025f) - 1.0f;
                         val >>= 7;
-                        float xRotation = ((val & 63) * 0.025f) - 1.0f;
+                        float xRotation = ((val & 127) * 0.025f) - 1.0f;
                         val >>= 7;
                         float wRotation = (float) Math.Sqrt(1.0f - (float) Math.Pow(zRotation, 2) -
                                                             (float) Math.Pow(yRotation, 2) -
