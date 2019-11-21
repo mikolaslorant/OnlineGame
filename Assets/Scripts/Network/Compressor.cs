@@ -191,6 +191,7 @@ namespace Network
 
         private byte[] WriteSnapshot(SnapshotMessage message)
         {
+            Debug.Log("Pre compression position: " + message.WorldState.Players[1].Position);
             int word1 = message.Id;
             byte word2 = (byte) message.SenderId;
             word2 <<= 3;
@@ -212,20 +213,20 @@ namespace Network
                         long word4 = 0;
                         word4 |= (byte) ps.Key;
                         word4 <<= 12;
-                        int xDim = (int) Math.Floor(ps.Value.Position.x / 0.1) + 200;
+                        int xDim = (int) Math.Floor((ps.Value.Position.x  + 100)/0.1);
                         word4 |= xDim;
-                        int yDim = (int) Math.Floor(ps.Value.Position.y / 0.1) + 200;
+                        int yDim = (int) Math.Floor((ps.Value.Position.y  + 100)/0.1);
                         word4 <<= 12;
                         word4 |= yDim;
-                        int zDim = (int) Math.Floor(ps.Value.Position.z / 0.1) + (int) Math.Floor(200 / 0.1);
+                        int zDim = (int)Math.Floor((ps.Value.Position.z  + 100)/0.1);
                         word4 <<= 12;
                         word4 |= zDim;
                         word4 <<= 6;
-                        word4 |= ((int) Math.Floor(ps.Value.Rotation.x / 0.05) + (int) Math.Floor(1 / 0.05));
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.05);
                         word4 <<= 6;
-                        word4 |= ((int) Math.Floor(ps.Value.Rotation.y / 0.05) + (int) Math.Floor(1 / 0.05));
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.05);
                         word4 <<= 6;
-                        word4 |= ((int) Math.Floor(ps.Value.Rotation.z / 0.05) + (int) Math.Floor(1 / 0.05));
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.05);
                         word4 <<= 1;
                         word4 |= (ps.Value.Rotation.w > 0) ? 1 : 0;
                         word4 <<= 4;
@@ -260,7 +261,7 @@ namespace Network
                         long val = reader.ReadInt64();
                         int hp = (int) ((val & 15) * 10);
                         val >>= 4;
-                        byte isPositive = (byte) ((val & 1) - 1);
+                        byte isPositive = (byte) (val & 1);
                         val >>= 1;
                         float zRotation = ((val & 63) * 0.05f) - 1.0f;
                         val >>= 6;
@@ -271,7 +272,7 @@ namespace Network
                         float wRotation = (float) Math.Sqrt(1.0f - (float) Math.Pow(zRotation, 2) -
                                                             (float) Math.Pow(yRotation, 2) -
                                                             (float) Math.Pow(xRotation, 2));
-                        wRotation *= isPositive;
+                        wRotation *= (isPositive > 0) ? 1 : -1;
                         Quaternion quaternion = new Quaternion(xRotation, yRotation, zRotation, wRotation);
                         float zPosition = ((val & 4095) * 0.1f - 100.0f);
                         val >>= 12;
@@ -279,6 +280,7 @@ namespace Network
                         val >>= 12;
                         float xPosition = ((val & 4095) * 0.1f - 100.0f);
                         Vector3 position = new Vector3(xPosition, yPosition, zPosition);
+                        Debug.Log("AFTER DESCOMPRESIION: " + position);
                         val >>= 12;
                         int key = (int) (val & 7);
                         PlayerState playerState = new PlayerState(position, quaternion, hp);
