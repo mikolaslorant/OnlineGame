@@ -101,10 +101,10 @@ namespace Network
                     int messageId = reader.ReadInt32();
                     char byte2 = reader.ReadChar();
                     char byte3 = reader.ReadChar();
-                    int receiver = (int) byte2 % 8;
+                    int receiver = (int) byte2 % 7;
                     byte2 >>= 3;
-                    int sender = (int) byte2 % 8;
-                    MessageType ackType = (MessageType) ((int) byte3 % 8);
+                    int sender = (int) byte2 % 7;
+                    MessageType ackType = (MessageType) ((int) byte3 % 7);
                     return new AckMessage(messageId, sender, receiver, ackType);
                 }
             }
@@ -141,9 +141,9 @@ namespace Network
                 {
                     int messageId = reader.ReadInt32();
                     char byte2 = reader.ReadChar();
-                    int receiver = (int) byte2 % 8;
+                    int receiver = (int) byte2 % 7;
                     byte2 >>= 3;
-                    int sender = (int) byte2 % 8;
+                    int sender = (int) byte2 % 7;
                     return new ConnectionRequestMessage(messageId, sender, receiver);
                 }
             }
@@ -181,9 +181,9 @@ namespace Network
                 {
                     int messageId = reader.ReadInt32();
                     char byte2 = reader.ReadChar();
-                    int receiver = (int) byte2 % 8;
+                    int receiver = (int) byte2 % 7;
                     byte2 >>= 3;
-                    int sender = (int) byte2 % 8;
+                    int sender = (int) byte2 % 7;
                     return new ConnectionResponseMessage(messageId, sender, receiver);
                 }
             }
@@ -191,7 +191,7 @@ namespace Network
 
         private byte[] WriteSnapshot(SnapshotMessage message)
         {
-            Debug.Log("Pre compression position: " + message.WorldState.Players[1].Position);
+            Debug.Log(message.WorldState.Players[1].Position);
             int word1 = message.Id;
             byte word2 = (byte) message.SenderId;
             word2 <<= 3;
@@ -280,7 +280,6 @@ namespace Network
                         val >>= 12;
                         float xPosition = ((val & 4095) * 0.1f - 100.0f);
                         Vector3 position = new Vector3(xPosition, yPosition, zPosition);
-                        Debug.Log("AFTER DESCOMPRESIION: " + position);
                         val >>= 12;
                         int key = (int) (val & 7);
                         PlayerState playerState = new PlayerState(position, quaternion, hp);
@@ -342,7 +341,7 @@ namespace Network
                     float xMouse = (word3 & 63) * 0.05f - 1.0f;
                     byte bitmap = reader.ReadByte();
                     int tick = reader.ReadInt32();
-                    return new PlayerInputMessage(sender, receiver, new PlayerInput(bitmap, xMouse, yMouse, tick));
+                    return new PlayerInputMessage(id, sender, receiver, new PlayerInput(bitmap, xMouse, yMouse, tick));
                 }
             }
         }
