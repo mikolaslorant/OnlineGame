@@ -4,6 +4,7 @@ using System.IO;
 using Game;
 using Helpers;
 using Network;
+using Unity.UNetWeaver;
 using UnityEngine;
 
 
@@ -191,7 +192,6 @@ namespace Network
 
         private byte[] WriteSnapshot(SnapshotMessage message)
         {
-            Debug.Log(message.WorldState.Players[1].Position);
             int word1 = message.Id;
             byte word2 = (byte) message.SenderId;
             word2 <<= 3;
@@ -233,7 +233,7 @@ namespace Network
                         word4 |= (ps.Value.Health / 10);
                         writer.Write(word4);
                     }
-
+                    Debug.Log(message.Tick);
                     writer.Write(message.Tick);
                     writer.Write(message.TimeStamp);
                 }
@@ -288,7 +288,8 @@ namespace Network
 
                     int tick = reader.ReadInt32();
                     float timestamp = reader.ReadInt32();
-
+                    
+                    
                     return new SnapshotMessage(messageId, sender, receiver, worldState, tick, timestamp);
                 }
             }
@@ -303,10 +304,6 @@ namespace Network
             word2 |= (byte) message.ReceiverId;
             byte word3 = (byte) message.Type();
             word3 <<= 3;
-            byte word4 = 0;
-            word4 = (byte) Math.Floor((message.PlayerInput.MouseXAxis + 1.0) / 0.05);
-            word4 <<= 6;
-            word4 |= (byte) Math.Floor((message.PlayerInput.MouseYAxis + 1.0) / 0.05);
             using (MemoryStream m = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(m))
@@ -314,7 +311,8 @@ namespace Network
                     writer.Write(word1);
                     writer.Write(word2);
                     writer.Write(word3);
-                    writer.Write(word4);
+                    writer.Write(message.PlayerInput.MouseXAxis);
+                    writer.Write(message.PlayerInput.MouseYAxis);
                     writer.Write(message.PlayerInput.Bitmap);
                     writer.Write(message.PlayerInput.Tick);
                 }
@@ -335,10 +333,8 @@ namespace Network
                     word1 >>= 3;
                     int sender = word1 & 7;
                     byte word2 = reader.ReadByte();
-                    byte word3 = reader.ReadByte();
-                    float yMouse = (word3 & 63) * 0.05f - 1.0f;
-                    word3 >>= 6;
-                    float xMouse = (word3 & 63) * 0.05f - 1.0f;
+                    float yMouse = reader.ReadInt32();
+                    float xMouse = reader.ReadInt32();
                     byte bitmap = reader.ReadByte();
                     int tick = reader.ReadInt32();
                     return new PlayerInputMessage(id, sender, receiver, new PlayerInput(bitmap, xMouse, yMouse, tick));
