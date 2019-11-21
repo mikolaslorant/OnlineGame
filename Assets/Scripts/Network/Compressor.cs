@@ -13,6 +13,7 @@ namespace Network
     {
         public byte[] Compress(Message message)
         {
+            //Debug.Log("Sender: " + message.SenderId + "Receiver: " + message.ReceiverId);
             switch (message.Type())
             {
                 case MessageType.ACK:
@@ -40,6 +41,7 @@ namespace Network
                     int id = reader.ReadInt32();
                     byte word = reader.ReadByte();
                     type = reader.ReadByte();
+                    //Debug.Log("Receiver: " + (word & 7) + "Sender " + ((word >> 3) & 7));
                 }
             }
 
@@ -216,6 +218,7 @@ namespace Network
                         word4 <<= 12;
                         word4 |= yDim;
                         int zDim = (int) Math.Floor(ps.Value.Position.z / 0.1) + (int) Math.Floor(200 / 0.1);
+                        word4 <<= 12;
                         word4 |= zDim;
                         word4 <<= 6;
                         word4 |= ((int) Math.Floor(ps.Value.Rotation.x / 0.05) + (int) Math.Floor(1 / 0.05));

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using Game;
 using Helpers;
@@ -148,6 +149,7 @@ namespace Network
                     {
                         // instance new player;
                         GameObject newPlayer;
+                        Debug.Log(player.Key.ToString() + "  " + _clientId.ToString());
                         if (player.Key == _clientId)
                         {
                             newPlayer = Instantiate(mainCharacterPrefab, player.Value.Position, Quaternion.identity);
