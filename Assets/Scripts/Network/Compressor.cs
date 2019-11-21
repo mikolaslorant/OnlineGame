@@ -221,12 +221,12 @@ namespace Network
                         int zDim = (int)Math.Floor((ps.Value.Position.z  + 100)/0.1);
                         word4 <<= 12;
                         word4 |= zDim;
-                        word4 <<= 6;
-                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.05);
-                        word4 <<= 6;
-                        word4 |= (int) Math.Floor((ps.Value.Rotation.y + 1) / 0.05);
-                        word4 <<= 6;
-                        word4 |= (int) Math.Floor((ps.Value.Rotation.z + 1) / 0.05);
+                        word4 <<= 7;
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.x + 1) / 0.025);
+                        word4 <<= 7;
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.y + 1) / 0.025);
+                        word4 <<= 7;
+                        word4 |= (int) Math.Floor((ps.Value.Rotation.z + 1) / 0.025);
                         word4 <<= 1;
                         word4 |= (ps.Value.Rotation.w > 0) ? 1 : 0;
                         word4 <<= 4;
@@ -263,11 +263,11 @@ namespace Network
                         val >>= 4;
                         byte isPositive = (byte) (val & 1);
                         val >>= 1;
-                        float zRotation = ((val & 63) * 0.05f) - 1.0f;
+                        float zRotation = ((val & 63) * 0.025f) - 1.0f;
                         val >>= 6;
-                        float yRotation = ((val & 63) * 0.05f) - 1.0f;
+                        float yRotation = ((val & 63) * 0.025f) - 1.0f;
                         val >>= 6;
-                        float xRotation = ((val & 63) * 0.05f) - 1.0f;
+                        float xRotation = ((val & 63) * 0.025f) - 1.0f;
                         val >>= 6;
                         float wRotation = (float) Math.Sqrt(1.0f - (float) Math.Pow(zRotation, 2) -
                                                             (float) Math.Pow(yRotation, 2) -
